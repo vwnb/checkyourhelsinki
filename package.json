@@ -46,10 +46,12 @@
     "body-parser": "^1.15.2",
     "geocoder": "^0.2.2",
     "jsdom": "^9.8.3",
+    "material-ui": "^0.16.1",
     "point-in-polygon": "^1.0.1",
     "react": "^0.14.6",
     "react-dom": "^0.14.6",
     "react-highcharts": "^11.0.0",
+    "react-toolbox": "^1.2.4",
     "request": "^2.76.0",
     "togeojson": "^0.16.0",
     "xlsx": "^0.8.0"

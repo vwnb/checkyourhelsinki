@@ -30,8 +30,9 @@ app.get('*', function(req, res) {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+app.set('port', (process.env.PORT || 3000));
 
-//old
+app.use('/', express.static(path.join(__dirname, 'src')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
@@ -294,19 +295,6 @@ app.get('/api', function(req, res) {
 });
 
 
-
-
-
-
-
-
-
-
-
-app.listen(3000, function(err) {
-  if (err) {
-    return console.error(err);
-  }
-
-  console.log('Listening at http://localhost:3000/');
-})
+app.listen(app.get('port'), function() {
+  console.log('Server started: http://localhost:' + app.get('port') + '/');
+});

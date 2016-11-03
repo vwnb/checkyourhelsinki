@@ -6,6 +6,31 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 const ReactHighcharts = require('react-highcharts');
 const _ = require('underscore');
+import FlatButton from 'material-ui/FlatButton';
+import getMuiTheme        from 'material-ui/styles/getMuiTheme';
+import MuiThemeProvider   from 'material-ui/styles/MuiThemeProvider';
+
+
+
+// navbar
+
+import  {Component} from 'react';
+import AppBar from 'material-ui/AppBar';
+
+import IconMenu from 'material-ui/IconMenu';
+import IconButton from 'material-ui/IconButton';
+import FontIcon from 'material-ui/FontIcon';
+import NavigationExpandMoreIcon from 'material-ui/svg-icons/navigation/expand-more';
+import MenuItem from 'material-ui/MenuItem';
+import DropDownMenu from 'material-ui/DropDownMenu';
+import RaisedButton from 'material-ui/RaisedButton';
+import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
+
+// navbar
+
+
+
+
 
 var ModuleList = React.createClass({
   render: function() {
@@ -293,7 +318,38 @@ var ModuleWrap = React.createClass({
 
 
 
+
+
+var Form = React.createClass({
+
+  render: function() {
+    return (
+       <MuiThemeProvider muiTheme={getMuiTheme()}>
+               <div>
+                      <AppBar
+                        title="Check Your Helsinki"
+
+                      />
+                    </div>
+            </MuiThemeProvider>
+    );
+  }
+});
+
+
+ReactDOM.render(
+  <Form  />,
+  document.getElementById('nav')
+);
+
+
+
+
+
 ReactDOM.render(
   <ModuleWrap url="/api" />,
   document.getElementById('content')
 );
+
+
+
