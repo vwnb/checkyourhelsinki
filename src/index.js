@@ -6,7 +6,7 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 const ReactHighcharts = require('react-highcharts');
 const _ = require('underscore');
-import FlatButton from 'material-ui/FlatButton';
+
 import getMuiTheme        from 'material-ui/styles/getMuiTheme';
 import MuiThemeProvider   from 'material-ui/styles/MuiThemeProvider';
 
@@ -16,6 +16,10 @@ import MuiThemeProvider   from 'material-ui/styles/MuiThemeProvider';
 
 import  {Component} from 'react';
 import AppBar from 'material-ui/AppBar';
+
+import Dialog from 'material-ui/Dialog';
+import FlatButton from 'material-ui/FlatButton';
+
 
 import IconMenu from 'material-ui/IconMenu';
 import IconButton from 'material-ui/IconButton';
@@ -321,15 +325,54 @@ var ModuleWrap = React.createClass({
 
 
 var Form = React.createClass({
+ state : {
+    open: false,
+  },
+getInitialState: function() {
+    return {open: false};
+  },
+handleOpen: function(e) {
+    this.setState({open: true});
+  },
+  handleClose: function(e) {
+      this.setState({open: false});
+    },
 
   render: function() {
+        const actions = [
+              <FlatButton
+                label="Cancel"
+                primary={true}
+                onTouchTap={this.handleClose}
+              />,
+              <FlatButton
+                label="Submit"
+                primary={true}
+                keyboardFocused={true}
+                onTouchTap={this.handleClose}
+              />,
+            ];
     return (
        <MuiThemeProvider muiTheme={getMuiTheme()}>
                <div>
                       <AppBar
                         title="Check Your Helsinki"
+                        iconElementRight={<RaisedButton label="Sign up"
+                        onTouchTap={this.handleOpen}
+
+                         />}
 
                       />
+                  <Dialog
+                       title="Dialog With Actions"
+                       actions={actions}
+                       modal={false}
+                       open={this.state.open}
+                       onRequestClose={this.handleClose}
+                     >
+                       The actions in this window were passed in as an array of React objects.
+                     </Dialog>
+
                     </div>
             </MuiThemeProvider>
     );
