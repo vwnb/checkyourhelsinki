@@ -83,11 +83,7 @@ var ModuleList = React.createClass({
 /* Placeholder */
 
 var ShitModule = React.createClass({
-  rawMarkup: function() {
-    var md = new Remarkable();
-    var rawMarkup = md.render(this.props.children.toString());
-    return { __html: rawMarkup };
-  },
+
 
   render: function() {
       console.log(this.props.data);
@@ -106,23 +102,26 @@ var ShitModule = React.createClass({
 /* Paragraphs (type text) */
 
 var TextModule = React.createClass({
-  rawMarkup: function() {
-    var md = new Remarkable();
-    var rawMarkup = md.render(this.props.children.toString());
-    return { __html: rawMarkup };
-  },
+
 
   render: function() {
       console.log(this.props.data);
     return (
-      <section className="module">
-        <h2>
-          {this.props.title}
-        </h2>
+      <MuiThemeProvider muiTheme={getMuiTheme()}>
+      <Card>
+         <CardHeader
+              title={this.props.title}
+              actAsExpander={true}
+              showExpandableButton={true}
+            />
+       <CardText  >
         {this.props.data.map(function(p) {
         return <p>{p}</p>
         })}
-      </section>
+
+  </CardText>
+       </Card>
+        </MuiThemeProvider >
     );
   }
 });
@@ -131,11 +130,7 @@ var TextModule = React.createClass({
 /* Pics */
 
 var PicModule = React.createClass({
-  rawMarkup: function() {
-    var md = new Remarkable();
-    var rawMarkup = md.render(this.props.children.toString());
-    return { __html: rawMarkup };
-  },
+
 
   render: function() {
     return (
@@ -156,11 +151,7 @@ var PicModule = React.createClass({
 /* Pie chart (generic, varying on props.data) */
 
 var PieModule = React.createClass({
-  rawMarkup: function() {
-    var md = new Remarkable();
-    var rawMarkup = md.render(this.props.children.toString());
-    return { __html: rawMarkup };
-  },
+
   config: {
     chart: {
         plotBackgroundColor: null,
@@ -219,11 +210,8 @@ var PieModule = React.createClass({
 /* Map */
 
 var MapModule = React.createClass({
-  rawMarkup: function() {
-    var md = new Remarkable();
-    var rawMarkup = md.render(this.props.children.toString());
-    return { __html: rawMarkup };
-  },
+
+
   renderMap: function(){
     this.map = new google.maps.Map(this.refs.map, {
         center: {lat:60.1804927,lng:24.9098811},
