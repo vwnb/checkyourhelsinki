@@ -10,7 +10,12 @@ import _ from 'underscore';
 import getMuiTheme        from 'material-ui/styles/getMuiTheme';
 import MuiThemeProvider   from 'material-ui/styles/MuiThemeProvider';
 
+import {Tabs, Tab} from 'material-ui/Tabs';
+import injectTapEventPlugin from 'react-tap-event-plugin';
 
+// Needed for onTouchTap
+// http://stackoverflow.com/a/34015469/988941
+injectTapEventPlugin();
 
 // navbar
 
@@ -41,31 +46,31 @@ import {Card, CardActions, CardHeader, CardMedia, CardTitle, CardText} from 'mat
 
 var ModuleList = React.createClass({
   render: function() {
-    var modules = this.props.data.map(function(module) {
+    var modules = this.props.data.map((module, index) => {
       switch(module.type){
         case "mess":
           return (
-            <ShitModule title={module.title} data={module.data} type={module.type}>
+            <ShitModule key={"m"+index} title={module.title} data={module.data} type={module.type}>
             </ShitModule>
           );
         case "text":
           return (
-            <TextModule title={module.title} data={module.data} type={module.type}>
+            <TextModule key={"m"+index} title={module.title} data={module.data} type={module.type}>
             </TextModule>
           );
         case "pie":
           return (
-            <PieModule title={module.title} data={module.data} type={module.type}>
+            <PieModule key={"m"+index} title={module.title} data={module.data} type={module.type}>
             </PieModule>
           );
         case "map":
           return (
-            <MapModule title={module.title} data={module.data} type={module.type}>
+            <MapModule key={"m"+index} title={module.title} data={module.data} type={module.type}>
             </MapModule>
           );
         case "pics":
           return (
-            <PicModule title={module.title} data={module.data} type={module.type}>
+            <PicModule key={"m"+index} title={module.title} data={module.data} type={module.type}>
             </PicModule>
           );
       }
@@ -105,7 +110,6 @@ var TextModule = React.createClass({
 
 
   render: function() {
-      console.log(this.props.data);
     return (
       <MuiThemeProvider muiTheme={getMuiTheme()}>
       <Card>
@@ -114,8 +118,8 @@ var TextModule = React.createClass({
               title={this.props.title}
             />
        <CardText actAsExpander={true}  >
-        {this.props.data.map(function(p) {
-        return <p>{p}</p>
+        {this.props.data.map((p, index) => {
+        return <p key={"p"+index}>{p}</p>
         })}
 
   </CardText>
@@ -132,6 +136,7 @@ var PicModule = React.createClass({
 
 
   render: function() {
+      console.log("hey");
     return (
       <section className="module">
         <h2>
@@ -289,6 +294,9 @@ var AddressForm = React.createClass({
         <img src="banner2.jpg" />
          </CardMedia>
         </Card><br/>
+        <Card>
+            
+        <CardText>
         <form onSubmit={this.handleSubmit}>
             <TextField
             className ="InputField"
@@ -302,7 +310,8 @@ var AddressForm = React.createClass({
             /><br/>
             <RaisedButton type="submit" primary={true} label ="Find details" fullWidth={true} />
         </form>
-
+        </CardText>
+        </Card>
       </div>
         </MuiThemeProvider >
     );
@@ -320,7 +329,7 @@ var ModuleWrap = React.createClass({
       type: 'GET',
       data: data,
       success: function(data) {
-        this.setState({data: data});
+        this.setState({ data: _.toArray(_.groupBy(data, 'type')) });
       }.bind(this),
       error: function(xhr, status, err) {
         console.error(this.props.url, status, err.toString());
@@ -330,12 +339,29 @@ var ModuleWrap = React.createClass({
   getInitialState: function() {
     return {data: []};
   },
+  handleChange : function(value){
+      console.log("hei");
+      this.setState({
+        selectedValue: value,
+      });
+  },
   render: function() {
     return (
+      <MuiThemeProvider muiTheme={getMuiTheme()}>
       <div className="moduleBox">
         <AddressForm onAddressSubmit={this.handleAddressSubmit}  />
-        <ModuleList data={this.state.data} />
+        <Tabs value={this.state.selectedValue} onChange={this.handleChange}>
+        {this.state.data.map((list, index) => {
+            return  <Tab
+                        key={"t"+index}
+                        label={list[0].type}
+                        value={index}>
+                        <ModuleList data={list} />
+                    </Tab>;
+        })}
+        </Tabs>
       </div>
+      </MuiThemeProvider>
     );
   }
 });

@@ -53,7 +53,7 @@ app.get('/api', function(req, res) {
     var inputAddress = req.query.address;
 
     /* Number of different modules that should be requested */
-    var expectedNum = 6; //can be dynamic or defined by hand
+    var expectedNum = 4; //can be dynamic or defined by hand
 
     /* Results of those requests go in this array */
     var modules = [];
@@ -193,13 +193,6 @@ app.get('/api', function(req, res) {
 
         if(Object.getOwnPropertyNames(demographicsObj).length){
 
-            var demographicsModule = {
-                title: "Big mess of demographics",
-                type: "mess",
-                data: demographicsObj
-            }
-            addModule( demographicsModule );
-
 
             var ageDemographicsModule = {
                 title: "Age demographics",
@@ -261,33 +254,37 @@ app.get('/api', function(req, res) {
 
 
 
-        /* 4: PICS */
-        var panoramioRectangleRadius = 0.01; /* 0.05 lat/lng = about 6km */
-        request('http://www.panoramio.com/map/get_panoramas.php?set=public&from=0&to=10'
-               +'&minx=' + (data.results[0].geometry.location.lng - panoramioRectangleRadius)
-               +'&miny=' + (data.results[0].geometry.location.lat - panoramioRectangleRadius)
-               +'&maxx=' + (data.results[0].geometry.location.lng + panoramioRectangleRadius)
-               +'&maxy=' + (data.results[0].geometry.location.lat + panoramioRectangleRadius)
-               +'&size=medium&mapfilter=true',
-            function (error, response, body) {
 
-            if (!error && response.statusCode == 200 && JSON.parse(body).photos.length) {
+        /* DEPRECATED AFTER PANORAMIO QUIT
+            data.results[0].geometry;
+            var panoramioRectangleRadius = 0.01; /* 0.05 lat/lng = about 6km
+            var panoramioUrl = 'http://www.panoramio.com/map/get_panoramas.php?set=public&from=0&to=10'
+                +'&minx=' + (data.results[0].geometry.location.lng - panoramioRectangleRadius)
+                +'&miny=' + (data.results[0].geometry.location.lat - panoramioRectangleRadius)
+                +'&maxx=' + (data.results[0].geometry.location.lng + panoramioRectangleRadius)
+                +'&maxy=' + (data.results[0].geometry.location.lat + panoramioRectangleRadius)
+                +'&size=medium&mapfilter=true';
+                console.log(panoramioUrl);
+            request(panoramioUrl,
+                function (error, response, body) {
 
-                /* This part should always be always similar because these objects go to UI */
-                var picModule = {
-                    title: "Pictures from around the area",
-                    type: "pics",
-                    data: JSON.parse(body)
+                if (!error && response.statusCode == 200 && JSON.parse(body).photos.length) {
+
+                    var picModule = {
+                        title: "Pictures from around the area",
+                        type: "pics",
+                        data: JSON.parse(body)
+                    }
+                    addModule( picModule );
+
+                }else{
+
+                    expectedNum--;
+                    tryResponse();
                 }
-                addModule( picModule );
 
-            }else{
-
-                expectedNum--;
-                tryResponse();
-            }
-
-        })
+            })
+        */
 
 
 
