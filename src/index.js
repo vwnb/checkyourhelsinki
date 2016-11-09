@@ -29,6 +29,9 @@ import MenuItem from 'material-ui/MenuItem';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import RaisedButton from 'material-ui/RaisedButton';
 import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
+import TextField from 'material-ui/TextField';
+
+import {Card, CardActions, CardHeader, CardMedia, CardTitle, CardText} from 'material-ui/Card';
 
 // navbar
 
@@ -274,17 +277,34 @@ var AddressForm = React.createClass({
   },
   render: function() {
     return (
-      <section className="addressForm">
+        <MuiThemeProvider muiTheme={getMuiTheme()}>
+        <div>
+        <Card>
+             <CardHeader
+               title="Murad Tanmoy"
+               subtitle="Vanha Mantie"
+               avatar="murad.jpg"
+             />
+         <CardMedia  overlay={<CardTitle title="Check the latest information on your local area" subtitle="StreetCheck has information across Helsinki " />} >
+        <img src="banner2.jpg" />
+         </CardMedia>
+        </Card><br/>
         <form onSubmit={this.handleSubmit}>
-            <input
-            type="text"
-            placeholder="Address search"
+            <TextField
+            className ="InputField"
+            type = "text"
+            hintText="Buleverdi 30"
+            floatingLabelText="Address You want to check"
             value={this.state.address}
             onChange={this.handleAddressChange}
-            />
-            <input type="submit" value="Find details" />
+            rows = {2}
+             fullWidth={true}
+            /><br/>
+            <RaisedButton type="submit" primary={true} label ="Find details" fullWidth={true} />
         </form>
-      </section>
+
+      </div>
+        </MuiThemeProvider >
     );
   }
 });
