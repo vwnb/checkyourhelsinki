@@ -2,10 +2,10 @@
 
 "use strict"
 
-const React = require('react');
-const ReactDOM = require('react-dom');
-const ReactHighcharts = require('react-highcharts');
-const _ = require('underscore');
+import React, { PropTypes, cloneElement} from 'react';
+import ReactDOM from 'react-dom';
+import ReactHighcharts from 'react-highcharts';
+import _ from 'underscore';
 
 import getMuiTheme        from 'material-ui/styles/getMuiTheme';
 import MuiThemeProvider   from 'material-ui/styles/MuiThemeProvider';
@@ -109,6 +109,7 @@ var TextModule = React.createClass({
     return (
       <MuiThemeProvider muiTheme={getMuiTheme()}>
       <Card>
+
          <CardHeader
               title={this.props.title}
             />
@@ -210,18 +211,21 @@ var PieModule = React.createClass({
 
 
 /* Map */
+export default class MapModule extends React.Component{
 
-var MapModule = React.createClass({
+ constructor(props) {
+    super(props);
+    this.state = {value: 2};
+  }
 
-
-  renderMap: function(){
+    handleChange = (event, index, value) => this.setState({value});
+  renderMap(){
     this.map = new google.maps.Map(this.refs.map, {
         center: {lat:60.1804927,lng:24.9098811},
         zoom: 12
     });
     var bounds = new google.maps.LatLngBounds();
     for(var service in this.props.data){
-
         var myLatlng = new google.maps.LatLng( this.props.data[service].latitude, this.props.data[service].longitude );
         var marker = new google.maps.Marker({
             position: myLatlng,
@@ -234,20 +238,26 @@ var MapModule = React.createClass({
     }
 
     this.map.fitBounds(bounds);
-  },
-  componentDidMount() { this.renderMap(); },
-  componentDidUpdate() { this.renderMap(); },
-  render: function() {
+  }
+  componentDidMount() { this.renderMap(); }
+  componentDidUpdate() { this.renderMap(); }
+  render() {
     return (
-      <section className="module">
-        <h2>
-          {this.props.title}
-        </h2>
-        <div ref="map" style={{height:"500px"}}>I should be a map!</div>
-      </section>
+      <MuiThemeProvider muiTheme={getMuiTheme()}>
+         <Card>
+       <CardHeader
+                     title={this.props.title}
+                   />
+
+
+
+        <div ref="map" style={{height:"200px"}}>I should be a map!</div>
+
+         </Card>
+      </MuiThemeProvider >
     );
   }
-});
+};
 
 var AddressForm = React.createClass({
   getInitialState: function() {
