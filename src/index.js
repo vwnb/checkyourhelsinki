@@ -111,10 +111,8 @@ var TextModule = React.createClass({
       <Card>
          <CardHeader
               title={this.props.title}
-              actAsExpander={true}
-              showExpandableButton={true}
             />
-       <CardText  >
+       <CardText actAsExpander={true}  >
         {this.props.data.map(function(p) {
         return <p>{p}</p>
         })}
@@ -195,12 +193,16 @@ var PieModule = React.createClass({
   render: function() {
 
     return (
-      <section className="module">
-        <h2>
-          {this.props.title}
-        </h2>
+    <MuiThemeProvider muiTheme={getMuiTheme()}>
+       <Card>
+               <CardHeader
+                    title={this.props.title}
+                  />
+            <CardText  >
         <ReactHighcharts config={this.config} ref="chart"></ReactHighcharts>
-      </section>
+         </CardText>
+            </Card>
+ </MuiThemeProvider >
     );
 
   }
