@@ -53,7 +53,7 @@ app.get('/api', function(req, res) {
     var inputAddress = req.query.address;
 
     /* Number of different modules that should be requested */
-    var expectedNum = 4; //can be dynamic or defined by hand
+    var expectedNum = 5; //can be dynamic or defined by hand
 
     /* Results of those requests go in this array */
     var modules = [];
@@ -161,6 +161,16 @@ app.get('/api', function(req, res) {
         //but each end up sticking uniform objects through addModule()
 
         /* 1: INTRO */
+        
+        /* This part should always be always similar because these objects go to UI */
+                var introMapModule = {
+                    title: "Location and surrounding area",
+                    type: "map",
+                    category: "Basic",
+                    data: [{latitude:data.results[0].geometry.location.lat, longitude:data.results[0].geometry.location.lng}]
+                }
+                addModule( introMapModule );
+        
         var titleArr = [];
         for(var idx in data.results[0].address_components){
             var component = data.results[0].address_components[idx].long_name;
@@ -183,6 +193,7 @@ app.get('/api', function(req, res) {
         var introModule = {
             title: titleStr,
             type: "text",
+            category: "Basic",
             data: descrArr
         }
         addModule(introModule);
@@ -197,6 +208,7 @@ app.get('/api', function(req, res) {
             var ageDemographicsModule = {
                 title: "Age demographics",
                 type: "pie",
+                category: "Demographic",
                 data: pruneObject(demographicsObj, [
                         "0-6-vuotiaat",
                         "7-15-vuotiaat",
@@ -214,6 +226,7 @@ app.get('/api', function(req, res) {
             var attractivenessModule = {
                 title: "Attractiveness",
                 type: "pie",
+                category: "Demographic",
                 data: pruneObject(demographicsObj, [
                         "Muutto alueelle lkm",
                         "Muutto alueelta lkm"
@@ -240,6 +253,7 @@ app.get('/api', function(req, res) {
                 var serviceModule = {
                     title: "Services in the area",
                     type: "map",
+                    category: "Services",
                     data: JSON.parse(body)
                 }
                 addModule( serviceModule );

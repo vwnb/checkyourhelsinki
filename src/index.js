@@ -329,7 +329,7 @@ var ModuleWrap = React.createClass({
       type: 'GET',
       data: data,
       success: function(data) {
-        this.setState({ data: _.toArray(_.groupBy(data, 'type')) });
+        this.setState({ data: _.toArray(_.groupBy(data, 'category')) });
       }.bind(this),
       error: function(xhr, status, err) {
         console.error(this.props.url, status, err.toString());
@@ -354,7 +354,7 @@ var ModuleWrap = React.createClass({
         {this.state.data.map((list, index) => {
             return  <Tab
                         key={"t"+index}
-                        label={list[0].type}
+                        label={list[0].category}
                         value={index}>
                         <ModuleList data={list} />
                     </Tab>;
