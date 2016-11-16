@@ -1,11 +1,9 @@
+
 var path = require('path');
 var webpack = require('webpack');
 var express = require('express');
 var config = require('./webpack.config');
 
-//old
-
-var path = require('path');
 var bodyParser = require('body-parser');
 var geocoder = require('geocoder');
 var request = require('request');
@@ -15,7 +13,7 @@ var tj = require('togeojson'),
 var inside = require('point-in-polygon');
 var xlsx = require('xlsx');
 
-
+var _ = require('underscore');
 
 var app = express();
 var compiler = webpack(config);
@@ -129,6 +127,7 @@ app.get('/api', function(req, res) {
         /* Prepare demographics */
 
         var demographicsObj = {};
+        /*
         var demographicsByRegion = xlsx.readFile("datasets/Helsinki_alueittain_2015.xlsx");
         var rowNum;
         if(typeof perusPiiri != "undefined"){
@@ -138,7 +137,7 @@ app.get('/api', function(req, res) {
                     break;
                 }
             }
-            /* loop cols */
+            // loop cols
             for(var i = 2; i <= 131; i++){
                 // demographicsObj[ KEY ] = VALUE;
                 // KEY at row 3, VALUE at the rowNum figured above
@@ -149,11 +148,9 @@ app.get('/api', function(req, res) {
                 }
             }
         }
-
-
-
-
-
+        */
+        
+        
 
 
         /*** MODULE CALLS ***/
@@ -162,14 +159,14 @@ app.get('/api', function(req, res) {
 
         /* 1: INTRO */
         
-        /* This part should always be always similar because these objects go to UI */
-                var introMapModule = {
-                    title: "Location and surrounding area",
-                    type: "map",
-                    category: "Basic",
-                    data: [{latitude:data.results[0].geometry.location.lat, longitude:data.results[0].geometry.location.lng}]
-                }
-                addModule( introMapModule );
+        /* UI expects this kind of format */
+        var introMapModule = {
+            title: "Location and surrounding area",
+            type: "map",
+            category: "Basic",
+            data: [{latitude:data.results[0].geometry.location.lat, longitude:data.results[0].geometry.location.lng}]
+        }
+        addModule( introMapModule );
         
         var titleArr = [];
         for(var idx in data.results[0].address_components){
@@ -201,9 +198,80 @@ app.get('/api', function(req, res) {
 
 
         /* 2: DEMOGRAPHICS */
+        
+        /* AGE DEMOGRAPHICS */
+        request('http://api.aluesarjat.fi/PXWeb/api/v1/fi/'+encodeURI('Helsingin seudun tilastot')+'/'+encodeURI('Pääkaupunkiseutu alueittain')+'/'+encodeURI('Väestö')+'/'+encodeURI('Väestörakenne')+'/'+encodeURI('A02S_HKI_Vakiluku1962.px'), function (error, response, body) {
 
+            if (!error && response.statusCode == 200 && body.length) {
+                
+                var parsedRootBody = JSON.parse(body);
+
+                request.post({
+                    url: 'http://api.aluesarjat.fi/PXWeb/api/v1/fi/'+encodeURI('Helsingin seudun tilastot')+'/'+encodeURI('Pääkaupunkiseutu alueittain')+'/'+encodeURI('Väestö')+'/'+encodeURI('Väestörakenne')+'/'+encodeURI('A02S_HKI_Vakiluku1962.px'),
+                    json: {
+                        query: [
+                            {
+                                code: "Alue",
+                                selection: { filter: "item", values: [perusPiiri.properties.KOKOTUNNUS] }
+                            },
+                            {
+                                code: "Vuosi",
+                                selection: { filter: "item", values: ["54"] } //54 is the ID for 2016... ridiculous
+                            }
+                        ],
+                        response: {
+                            format: "json"
+                        }
+                    }
+                },
+                function (error, response, postBody) {
+                    postBody = postBody.trim();
+                    var parsedBody = JSON.parse(postBody);
+                    
+                    if (!error && response.statusCode == 200 && postBody.length) {
+                        
+                        var ageLabels = _.where(parsedRootBody.variables, {code: "Ikä"})[0];
+                        
+                        var responseData = {}
+                        for(var row in parsedBody.data){
+                            
+                            var ageRowKey = parsedBody.data[row].key[1];
+                            
+                            //Don't need sum in pie
+                            if(ageRowKey == "all"){ continue; }
+                            
+                            var ageGroupIdx = ageLabels.values.indexOf(ageRowKey);
+                            var label = ageLabels.valueTexts[ageGroupIdx]
+                            responseData[label] = parseInt(parsedBody.data[row].values[0]);
+                        }
+                        
+                        var ageDemographicsModule = {
+                            title: "Age demographics",
+                            type: "pie",
+                            category: "Demographic",
+                            data: responseData
+                        }
+                        addModule( ageDemographicsModule );
+                        
+                    }else{
+                        expectedNum = expectedNum - 1;
+                        tryResponse();
+                    }
+                    
+                    //Attractiveness should come back here
+                    expectedNum = expectedNum - 1;
+        
+                });
+                
+            }else{
+                expectedNum = expectedNum - 2;
+                tryResponse();
+            }
+            
+        });
+        
+        /*
         if(Object.getOwnPropertyNames(demographicsObj).length){
-
 
             var ageDemographicsModule = {
                 title: "Age demographics",
@@ -221,8 +289,6 @@ app.get('/api', function(req, res) {
             }
             addModule( ageDemographicsModule );
 
-
-
             var attractivenessModule = {
                 title: "Attractiveness",
                 type: "pie",
@@ -237,19 +303,18 @@ app.get('/api', function(req, res) {
 
         }else{
 
-            /* Upon failure, lower expectations */
-            expectedNum = expectedNum - 3; /* 3 out of all modules fail on this check */
+            // Upon failure, lower expectations
+            expectedNum = expectedNum - 2; // 2 out of all modules fail on this check
             tryResponse();
 
         }
-
+        */
 
 
         /* 3: SERVICES */
         request('http://www.hel.fi/palvelukarttaws/rest/v2/unit/?lat='+(data.results[0].geometry.location.lat).toFixed(5)+'&lon='+(data.results[0].geometry.location.lng).toFixed(5)+'&distance=800', function (error, response, body) {
             if (!error && response.statusCode == 200 && JSON.parse(body).length) {
-
-                /* This part should always be always similar because these objects go to UI */
+                
                 var serviceModule = {
                     title: "Services in the area",
                     type: "map",

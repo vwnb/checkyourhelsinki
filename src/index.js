@@ -190,7 +190,11 @@ var PieModule = React.createClass({
     for(var service in this.props.data){
         chart.series[0].addPoint({
             name: service,
-            y: this.props.data[service]
+            y: parseInt(this.props.data[service])
+        });
+        console.log({
+            name: service,
+            y: parseInt(this.props.data[service])
         });
     }
   },
@@ -290,8 +294,8 @@ var AddressForm = React.createClass({
                subtitle="Vanha Mantie"
                avatar="murad.jpg"
              />
-         <CardMedia  overlay={<CardTitle title="Check the latest information on your local area" subtitle="StreetCheck has information across Helsinki " />} >
-        <img src="banner2.jpg" />
+         <CardMedia overlay={<CardTitle title="Check the latest information on your local area" subtitle="StreetCheck has information across Helsinki " />} >
+            <div style={{height:"500px", background:"grey"}}></div>
          </CardMedia>
         </Card><br/>
         <Card>

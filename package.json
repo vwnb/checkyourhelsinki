@@ -55,6 +55,7 @@
     "react-toolbox": "^1.2.4",
     "request": "^2.76.0",
     "togeojson": "^0.16.0",
+    "underscore": "^1.8.3",
     "xlsx": "^0.8.0"
   }
 }
