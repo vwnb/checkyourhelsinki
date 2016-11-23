@@ -45,16 +45,24 @@ app.use(function(req, res, next) {
     next();
 });
 
+
+/***** MAIN ENDPOINT (req = address, res = front modules as JSON) *****/
+
 app.get('/api', function(req, res) {
+
 
     /* User input string that will be attempted to locate */
     var inputAddress = req.query.address;
 
     /* Number of different modules that should be requested */
-    var expectedNum = 5; //can be dynamic or defined by hand
+    var expectedNum = 6; //can be dynamic or defined by hand
 
     /* Results of those requests go in this array */
     var modules = [];
+    
+    
+    
+    /* ABSTRACTED STUFF */
 
     /* Helper function that returns the request only after all modules are attempted, can be refactored elsewhere */
     function addModule(newModule){
@@ -69,19 +77,9 @@ app.get('/api', function(req, res) {
         }
     }
 
-    /* Helper for iterating Excel columns */
-    function colName(n) {
-        var ordA = 'a'.charCodeAt(0);
-        var ordZ = 'z'.charCodeAt(0);
-        var len = ordZ - ordA + 1;
 
-        var s = "";
-        while(n >= 0) {
-            s = String.fromCharCode(n % len + ordA) + s;
-            n = Math.floor(n / len) - 1;
-        }
-        return s;
-    }
+
+    /* HELPER FUNCTIONS FOR WHATEVER NODE PACKAGES DONT DO */
 
     /* Helper for title case */
     function toTitleCase(str){
@@ -98,6 +96,7 @@ app.get('/api', function(req, res) {
         }
         return result;
     }
+
 
 
     /* ROOT REQUEST: Get location */
@@ -124,42 +123,28 @@ app.get('/api', function(req, res) {
             }
         }
 
-        /* Prepare demographics */
-
-        var demographicsObj = {};
-        /*
-        var demographicsByRegion = xlsx.readFile("datasets/Helsinki_alueittain_2015.xlsx");
-        var rowNum;
-        if(typeof perusPiiri != "undefined"){
-            for(var i = 6; i <= 47; i++){ //find row number for Peruspiiri
-                if(demographicsByRegion.Sheets.Taulukko["A"+i].v.substring(0,3) == perusPiiri.properties.TUNNUS){
-                    rowNum = i;
-                    break;
-                }
-            }
-            // loop cols
-            for(var i = 2; i <= 131; i++){
-                // demographicsObj[ KEY ] = VALUE;
-                // KEY at row 3, VALUE at the rowNum figured above
-                // as thus: colName(i).toUpperCase()+rowNum
-                if(typeof demographicsByRegion.Sheets.Taulukko[ colName(i).toUpperCase() + "3" ] != "undefined"
-                    && typeof demographicsByRegion.Sheets.Taulukko[ colName(i).toUpperCase() + i ] != "undefined"){
-                    demographicsObj[ demographicsByRegion.Sheets.Taulukko[ colName(i).toUpperCase() + "3" ].v ] = demographicsByRegion.Sheets.Taulukko[ colName(i).toUpperCase() + rowNum ].v;
-                }
-            }
-        }
-        */
-        
-        
-
 
         /*** MODULE CALLS ***/
-        //each different because the APIs are different
-        //but each end up sticking uniform objects through addModule()
+        // each different because the APIs are different
+        /*
+            AFTER PARSING:
+                var moduleVariableName = {
+                    title: "Module title for UI view",
+                    type: "", //map, text, pics, pie
+                    category: "", //Basic, Demographic, Services
+                    data: { something : "freestyle JSON depending on type" }
+                }
+                addModule( moduleVariableName );
+            
+            FAILURE HANDLING:
+                expectedNum = expectedNum - 1;
+                tryResponse();
+                
+        */
 
         /* 1: INTRO */
         
-        /* UI expects this kind of format */
+        /* 1.1 INTRO MAP */
         var introMapModule = {
             title: "Location and surrounding area",
             type: "map",
@@ -168,6 +153,7 @@ app.get('/api', function(req, res) {
         }
         addModule( introMapModule );
         
+        /* 1.2 TEXT MODULE */
         var titleArr = [];
         for(var idx in data.results[0].address_components){
             var component = data.results[0].address_components[idx].long_name;
@@ -178,14 +164,6 @@ app.get('/api', function(req, res) {
         var titleStr = titleArr.join(" / ");
         var descrArr = [];
             descrArr.push(typeof perusPiiri != "undefined" ? titleStr + " is located in " + toTitleCase(perusPiiri.properties.NIMI) + "." : "Couldn't map "+titleStr+" to any Helsinki neighborhood. Maybe it's not in Helsinki?");
-
-        if(Object.getOwnPropertyNames(demographicsObj).length){
-            descrArr.push("In total, " + demographicsByRegion.Sheets.Taulukko[ "AG" + rowNum ].v + " people live in the area.");
-            descrArr.push("The population density is " + demographicsByRegion.Sheets.Taulukko[ "AD" + rowNum ].v + " people per square kilometer.");
-            descrArr.push("The employment rate in " + toTitleCase(perusPiiri.properties.NIMI) + " is " + demographicsByRegion.Sheets.Taulukko[ "DZ" + rowNum ].v + "%.");
-            descrArr.push("Average annual income of a person living in " + toTitleCase(perusPiiri.properties.NIMI) + " is " + demographicsByRegion.Sheets.Taulukko[ "BM" + rowNum ].v + "€.");
-            descrArr.push("In " + toTitleCase(perusPiiri.properties.NIMI) + ", you will find " + demographicsByRegion.Sheets.Taulukko[ "DP" + rowNum ].v + " Alko stores.");
-        }
 
         var introModule = {
             title: titleStr,
@@ -199,117 +177,135 @@ app.get('/api', function(req, res) {
 
         /* 2: DEMOGRAPHICS */
         
-        /* AGE DEMOGRAPHICS */
-        request('http://api.aluesarjat.fi/PXWeb/api/v1/fi/'+encodeURI('Helsingin seudun tilastot')+'/'+encodeURI('Pääkaupunkiseutu alueittain')+'/'+encodeURI('Väestö')+'/'+encodeURI('Väestörakenne')+'/'+encodeURI('A02S_HKI_Vakiluku1962.px'), function (error, response, body) {
+        /* 2.1 AGE DEMOGRAPHICS */
+        
+                
+        
+        
+        /*
+            url = encoded POST url string,
+            title = Title for module,
+            filters = simplified JSON object, should be documented but refer to existing usage
+            value = key of the value of interest
+        */
+        function makeDemographyPie(url, title, filters, value){
 
-            if (!error && response.statusCode == 200 && body.length) {
+            request(url, function (error, response, body) {
                 
                 var parsedRootBody = JSON.parse(body);
 
-                request.post({
-                    url: 'http://api.aluesarjat.fi/PXWeb/api/v1/fi/'+encodeURI('Helsingin seudun tilastot')+'/'+encodeURI('Pääkaupunkiseutu alueittain')+'/'+encodeURI('Väestö')+'/'+encodeURI('Väestörakenne')+'/'+encodeURI('A02S_HKI_Vakiluku1962.px'),
-                    json: {
-                        query: [
-                            {
-                                code: "Alue",
-                                selection: { filter: "item", values: [perusPiiri.properties.KOKOTUNNUS] }
-                            },
-                            {
-                                code: "Vuosi",
-                                selection: { filter: "item", values: ["54"] } //54 is the ID for 2016... ridiculous
+                if (!error && response.statusCode == 200 && body.length) {
+                    
+                    var filterQuery = [];
+                    for(var filter in filters){
+                        filterQuery.push( {code: filters[filter].key, selection: {filter: "item", values: filters[filter].value} } );
+                    }
+                    
+                    console.log(filterQuery);
+
+                    request.post({
+                        url: url,
+                        json: {
+                            query: filterQuery,
+                            response: {
+                                format: "json"
                             }
-                        ],
-                        response: {
-                            format: "json"
                         }
-                    }
-                },
-                function (error, response, postBody) {
-                    postBody = postBody.trim();
-                    var parsedBody = JSON.parse(postBody);
-                    
-                    if (!error && response.statusCode == 200 && postBody.length) {
+                    },
+                    function (error, response, postBody) {
+                        console.log(url);
+                        postBody = postBody.trim();
+                        var parsedBody = JSON.parse(postBody);
                         
-                        var ageLabels = _.where(parsedRootBody.variables, {code: "Ikä"})[0];
-                        
-                        var responseData = {}
-                        for(var row in parsedBody.data){
+                        if (!error && response.statusCode == 200 && postBody.length) {
                             
-                            var ageRowKey = parsedBody.data[row].key[1];
+                            //First object with code representing desired value such as age
+                            var theLabels = _.where(parsedRootBody.variables, {code: value})[0];
                             
-                            //Don't need sum in pie
-                            if(ageRowKey == "all"){ continue; }
+                            var responseData = {}
+                            for(var row in parsedBody.data){
+                                
+                                var thisRowKey = parsedBody.data[row].key[1];
+                                
+                                //Don't need sum in pie
+                                if(thisRowKey == "all"){ continue; }
+                                
+                                var ageGroupIdx = theLabels.values.indexOf(thisRowKey);
+                                var label = theLabels.valueTexts[ageGroupIdx]
+                                responseData[label] = parseInt(parsedBody.data[row].values[0]);
+                            }
                             
-                            var ageGroupIdx = ageLabels.values.indexOf(ageRowKey);
-                            var label = ageLabels.valueTexts[ageGroupIdx]
-                            responseData[label] = parseInt(parsedBody.data[row].values[0]);
+                            var ageDemographicsModule = {
+                                title: title,
+                                type: "pie",
+                                category: "Demographic",
+                                data: responseData
+                            }
+                            addModule( ageDemographicsModule );
+                            
+                        }else{
+                            expectedNum--;
+                            tryResponse();
                         }
                         
-                        var ageDemographicsModule = {
-                            title: "Age demographics",
-                            type: "pie",
-                            category: "Demographic",
-                            data: responseData
-                        }
-                        addModule( ageDemographicsModule );
-                        
-                    }else{
-                        expectedNum = expectedNum - 1;
-                        tryResponse();
-                    }
-                    
-                    //Attractiveness should come back here
-                    expectedNum = expectedNum - 1;
-        
-                });
-                
-            }else{
-                expectedNum = expectedNum - 2;
-                tryResponse();
-            }
             
-        });
+                    });
+                    
+                }else{
+                    
+                    expectedNum--;
+                    tryResponse();
+                }
+
+            });
+        }          
+
+
+        makeDemographyPie(
+            'http://api.aluesarjat.fi/PXWeb/api/v1/fi/'
+                    +encodeURI('Helsingin seudun tilastot')+'/'
+                    +encodeURI('Pääkaupunkiseutu alueittain')+'/'
+                    +encodeURI('Väestö')+'/'
+                    +encodeURI('Väestörakenne')+'/'
+                    +encodeURI('A02S_HKI_Vakiluku1962.px'),
+            "Age demographics",
+            [
+                { key: "Alue", value: [perusPiiri.properties.KOKOTUNNUS] },
+                { key: "Vuosi", value: ["54"] }
+            ],
+            "Ikä"
+        );
+
+        makeDemographyPie(
+            'http://api.aluesarjat.fi/PXWeb/api/v1/fi/'
+                    +encodeURI('Helsingin seudun tilastot')+'/'
+                    +encodeURI('Pääkaupunkiseutu alueittain')+'/'
+                    +encodeURI('Väestö')+'/'
+                    +encodeURI('Perheet')+'/'
+                    +encodeURI('A01S_HKI_Perhetyypit.px'),
+            "Family sizes",
+            [
+                { key: "Alue", value: [perusPiiri.properties.KOKOTUNNUS] },
+                { key: "Vuosi", value: ["17"] }
+            ],
+            "Perhetyyppi"
+        );
         
-        /*
-        if(Object.getOwnPropertyNames(demographicsObj).length){
-
-            var ageDemographicsModule = {
-                title: "Age demographics",
-                type: "pie",
-                category: "Demographic",
-                data: pruneObject(demographicsObj, [
-                        "0-6-vuotiaat",
-                        "7-15-vuotiaat",
-                        "16-18-vuotiaat",
-                        "19-24-vuotiaat",
-                        "25-39-vuotiaat",
-                        "40-64-vuotiaat",
-                        "Yli 65-vuotiaat"
-                      ])
-            }
-            addModule( ageDemographicsModule );
-
-            var attractivenessModule = {
-                title: "Attractiveness",
-                type: "pie",
-                category: "Demographic",
-                data: pruneObject(demographicsObj, [
-                        "Muutto alueelle lkm",
-                        "Muutto alueelta lkm"
-                      ])
-            }
-            addModule( attractivenessModule );
-
-
-        }else{
-
-            // Upon failure, lower expectations
-            expectedNum = expectedNum - 2; // 2 out of all modules fail on this check
-            tryResponse();
-
-        }
-        */
-
+        makeDemographyPie(
+            'http://api.aluesarjat.fi/PXWeb/api/v1/fi/'
+                    +encodeURI('Helsingin seudun tilastot')+'/'
+                    +encodeURI('Pääkaupunkiseutu alueittain')+'/'
+                    +encodeURI('Väestö')+'/'
+                    +encodeURI('Koulutustaso')+'/'
+                    +encodeURI('A01S_HKI_Vaesto_koulutusaste.px'),
+            "Education levels",
+            [
+                { key: "Alue", value: [perusPiiri.properties.KOKOTUNNUS] },
+                { key: "Vuosi", value: ["16"] }
+            ],
+            "Koulutusaste"
+        );
+        
 
         /* 3: SERVICES */
         request('http://www.hel.fi/palvelukarttaws/rest/v2/unit/?lat='+(data.results[0].geometry.location.lat).toFixed(5)+'&lon='+(data.results[0].geometry.location.lng).toFixed(5)+'&distance=800', function (error, response, body) {
@@ -328,43 +324,6 @@ app.get('/api', function(req, res) {
                 tryResponse();
             }
         })
-
-
-
-
-
-
-        /* DEPRECATED AFTER PANORAMIO QUIT
-            data.results[0].geometry;
-            var panoramioRectangleRadius = 0.01; /* 0.05 lat/lng = about 6km
-            var panoramioUrl = 'http://www.panoramio.com/map/get_panoramas.php?set=public&from=0&to=10'
-                +'&minx=' + (data.results[0].geometry.location.lng - panoramioRectangleRadius)
-                +'&miny=' + (data.results[0].geometry.location.lat - panoramioRectangleRadius)
-                +'&maxx=' + (data.results[0].geometry.location.lng + panoramioRectangleRadius)
-                +'&maxy=' + (data.results[0].geometry.location.lat + panoramioRectangleRadius)
-                +'&size=medium&mapfilter=true';
-                console.log(panoramioUrl);
-            request(panoramioUrl,
-                function (error, response, body) {
-
-                if (!error && response.statusCode == 200 && JSON.parse(body).photos.length) {
-
-                    var picModule = {
-                        title: "Pictures from around the area",
-                        type: "pics",
-                        data: JSON.parse(body)
-                    }
-                    addModule( picModule );
-
-                }else{
-
-                    expectedNum--;
-                    tryResponse();
-                }
-
-            })
-        */
-
 
 
     });
