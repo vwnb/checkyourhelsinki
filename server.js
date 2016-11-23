@@ -15,6 +15,8 @@ var xlsx = require('xlsx');
 
 var _ = require('underscore');
 
+const util = require('util');
+
 var app = express();
 var compiler = webpack(config);
 
@@ -55,7 +57,7 @@ app.get('/api', function(req, res) {
     var inputAddress = req.query.address;
 
     /* Number of different modules that should be requested */
-    var expectedNum = 6; //can be dynamic or defined by hand
+    var expectedNum = 7; //can be dynamic or defined by hand
 
     /* Results of those requests go in this array */
     var modules = [];
@@ -165,22 +167,115 @@ app.get('/api', function(req, res) {
         var descrArr = [];
             descrArr.push(typeof perusPiiri != "undefined" ? titleStr + " is located in " + toTitleCase(perusPiiri.properties.NIMI) + "." : "Couldn't map "+titleStr+" to any Helsinki neighborhood. Maybe it's not in Helsinki?");
 
-        var introModule = {
-            title: titleStr,
-            type: "text",
-            category: "Basic",
-            data: descrArr
-        }
-        addModule(introModule);
+        /* Absolutely crazy procedural thing that gets attractiveness data */
+        request.post({
+                url: "http://api.aluesarjat.fi/PXWeb/api/v1/fi/"
+                        +encodeURI("Helsingin seudun tilastot") + "/"
+                        +encodeURI("Pääkaupunkiseutu alueittain") + "/"
+                        +encodeURI("Väestö") + "/"
+                        +encodeURI("Väestonmuutokset") + "/"
+                        +encodeURI("A01S_HKI_Muuttoliike.px"),
+                json: {
+                    // filter
+                    query: [{
+                            "code": "Vuosi",
+                            "selection": {
+                                "filter": "item",
+                                "values": ["16"] //2016
+                            }
+                        },
+                        {
+                        "code": "Ikä",
+                            "selection": {
+                                "filter": "item",
+                                "values": ["99V"] //all ages
+                            }
+                        }],
+                    response: {
+                        format: "json"
+                    }
+                }
+            },
+            function (error, response, postBody) {
+                
+                postBody = postBody.trim();
+                var parsedBody = JSON.parse(postBody);
+                
+                if (!error && response.statusCode == 200 && postBody.length) {
+                    
+                    var attractivenessDescr = "";
+                    
+                    /* API returns a flat array so group by key[0] which is the Peruspiiri ID */
+                    var groupedByArea = _.groupBy(parsedBody.data, function(item){ return item.key[0] });
+                    
+                    /* Sort to get index, also print value of the attractiveness of Peruspiiri in question */
+                    var sortedByRatio = _.sortBy(
+                        groupedByArea,
+                        function(collection){
+                            
+                            /*
+                                BAD EXPLANATION FROM avoindata.fi
+
+                                    1 Kuntaan muuttaneet   =  Alueelle kunnan ulkopuolelta muuttaneet
+                                                              (ppl moved to area from outside Helsinki)
+                                    2 Sisäinen tulomuutto  =  Alueelle kunnasta muuttaneet, mukaan lukien alueen sisäiset muutot
+                                                              (ppl moved to area from inside Helsinki, INCLUDING PPL WHO USED TO LIVE THERE)
+                                    3 Kunnasta muuttaneet  =  Alueelta kunnan ulkopuolelle muuttaneet
+                                    4 Sisäinen lähtömuutto =  Alueelta kuntaan muuttaneet, mukaan lukien alueen sisäiset muutot
+                                                              (ppl moved out to any area in Helsinki, INCLUDING PPL WHOSE NEW CRIB IS IN THE SAME AREA)
+                                    5 Kokonaisnettomuutto  =  Alueen kaikkien tulo- ja lähtömuuttojen erotus
+                                
+                            */
+                            
+                            var movingDir1Obj  = _.filter(collection, function(item){ return item.key[1] == "1" }),
+                                movingDir2Obj = _.filter(collection, function(item){ return item.key[1] == "2" }),
+                                movingDir3Obj = _.filter(collection, function(item){ return item.key[1] == "3" }),
+                                movingDir4Obj = _.filter(collection, function(item){ return item.key[1] == "4" });
+                            
+                            var pplMovedIn = parseInt(movingDir1Obj[0].values[0]) + parseInt(movingDir2Obj[0].values[0]),
+                                pplMovedOut = parseInt(movingDir3Obj[0].values[0]) + parseInt(movingDir4Obj[0].values[0]);
+                            
+                            //Attractiveness = ratio of people moving in/out
+                            var attractiveness = (pplMovedIn / pplMovedOut);
+                            
+                            //Print spaghettifully here
+                            if(collection[0].key[0] == perusPiiri.properties.KOKOTUNNUS){
+                                attractivenessDescr += "The in/out migration ratio of "
+                                                    + toTitleCase(perusPiiri.properties.NIMI)
+                                                    + " is " + attractiveness.toFixed(3) + ".";
+                            }
+                            
+                            //return value for _.sortBy to sort by
+                            return attractiveness;
+                        }
+                    );
+                    
+                    // Plus one because it's a rank, not index
+                    var attractivenessRank = _.findIndex(sortedByRatio.reverse(), function(collection){
+                        return collection[0].key[0] == perusPiiri.properties.KOKOTUNNUS;
+                    }) + 1;
+                    
+                    attractivenessDescr += " "+toTitleCase(perusPiiri.properties.NIMI) + " is the #" + attractivenessRank + "/" + _.size(groupedByArea) + " most attractive area in Helsinki.";
+                    
+                    descrArr.push(attractivenessDescr);
+                    
+                }
+                
+                var introModule = {
+                    title: titleStr,
+                    type: "text",
+                    category: "Basic",
+                    data: descrArr
+                }
+                addModule(introModule);
+
+        });
 
 
 
         /* 2: DEMOGRAPHICS */
         
         /* 2.1 AGE DEMOGRAPHICS */
-        
-                
-        
         
         /*
             url = encoded POST url string,
@@ -200,8 +295,6 @@ app.get('/api', function(req, res) {
                     for(var filter in filters){
                         filterQuery.push( {code: filters[filter].key, selection: {filter: "item", values: filters[filter].value} } );
                     }
-                    
-                    console.log(filterQuery);
 
                     request.post({
                         url: url,
@@ -213,7 +306,7 @@ app.get('/api', function(req, res) {
                         }
                     },
                     function (error, response, postBody) {
-                        console.log(url);
+                        
                         postBody = postBody.trim();
                         var parsedBody = JSON.parse(postBody);
                         
@@ -228,20 +321,20 @@ app.get('/api', function(req, res) {
                                 var thisRowKey = parsedBody.data[row].key[1];
                                 
                                 //Don't need sum in pie
-                                if(thisRowKey == "all"){ continue; }
+                                if(thisRowKey.toLowerCase() == "all"){ continue; }
                                 
                                 var ageGroupIdx = theLabels.values.indexOf(thisRowKey);
                                 var label = theLabels.valueTexts[ageGroupIdx]
                                 responseData[label] = parseInt(parsedBody.data[row].values[0]);
                             }
                             
-                            var ageDemographicsModule = {
+                            var newDemographicsModule = {
                                 title: title,
                                 type: "pie",
                                 category: "Demographic",
                                 data: responseData
                             }
-                            addModule( ageDemographicsModule );
+                            addModule( newDemographicsModule );
                             
                         }else{
                             expectedNum--;
@@ -289,6 +382,23 @@ app.get('/api', function(req, res) {
                 { key: "Vuosi", value: ["17"] }
             ],
             "Perhetyyppi"
+        );
+        
+        makeDemographyPie(
+            'http://api.aluesarjat.fi/PXWeb/api/v1/fi/'
+                    +encodeURI('Helsingin seudun tilastot')+'/'
+                    +encodeURI('Pääkaupunkiseutu alueittain')+'/'
+                    +encodeURI('Väestö')+'/'
+                    +encodeURI('Väestonmuutokset')+'/'
+                    +encodeURI('A01S_HKI_Muuttoliike.px'),
+            "Attractiveness",
+            [
+                { key: "Alue", value: [perusPiiri.properties.KOKOTUNNUS] },
+                { key: "Ikä", value: ["99V"] },
+                { key: "Muuttosuunta", value: ["1", "2", "3", "4"] },
+                { key: "Vuosi", value: ["16"] }
+            ],
+            "Muuttosuunta"
         );
         
         makeDemographyPie(
