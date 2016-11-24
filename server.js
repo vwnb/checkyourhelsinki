@@ -151,7 +151,7 @@ app.get('/api', function(req, res) {
             title: "Location and surrounding area",
             type: "map",
             category: "Basic",
-            data: [{latitude:data.results[0].geometry.location.lat, longitude:data.results[0].geometry.location.lng}]
+            data: {markers: [{latitude:data.results[0].geometry.location.lat, longitude:data.results[0].geometry.location.lng}], filters: []}
         }
         addModule( introMapModule );
         
@@ -307,6 +307,8 @@ app.get('/api', function(req, res) {
                     },
                     function (error, response, postBody) {
                         
+                        console.log(url);
+                        console.log(postBody);
                         postBody = postBody.trim();
                         var parsedBody = JSON.parse(postBody);
                         
@@ -418,16 +420,37 @@ app.get('/api', function(req, res) {
         
 
         /* 3: SERVICES */
-        request('http://www.hel.fi/palvelukarttaws/rest/v2/unit/?lat='+(data.results[0].geometry.location.lat).toFixed(5)+'&lon='+(data.results[0].geometry.location.lng).toFixed(5)+'&distance=800', function (error, response, body) {
+        request('http://www.hel.fi/palvelukarttaws/rest/v2/unit/?lat='+(data.results[0].geometry.location.lat).toFixed(5)+'&lon='+(data.results[0].geometry.location.lng).toFixed(5)+'&distance=500', function (error, response, body) {
             if (!error && response.statusCode == 200 && JSON.parse(body).length) {
                 
-                var serviceModule = {
-                    title: "Services in the area",
-                    type: "map",
-                    category: "Services",
-                    data: JSON.parse(body)
-                }
-                addModule( serviceModule );
+                request('http://www.hel.fi/palvelukarttaws/rest/v2/service/', function (error, response, serviceListBody) {
+                    if (!error && response.statusCode == 200 && JSON.parse(serviceListBody).length) {
+                        
+                        var parsedBody = JSON.parse(body);
+                        var parsedServiceBody = JSON.parse(serviceListBody);
+                        var relevantServices = [];
+                        
+                        for(var service in parsedBody){
+                            for(idx in parsedBody[service].service_ids){
+                                if(typeof _.find(relevantServices, function(item){ return item.id == parsedBody[service].service_ids[idx] }) == "undefined"){
+                                    relevantServices.push(_.find(parsedServiceBody, function(item){ return item.id == parsedBody[service].service_ids[idx]}));
+                                }
+                            }
+                        }
+                        
+                        var serviceModule = {
+                            title: "Services in the area",
+                            type: "map",
+                            category: "Services",
+                            data: {markers: parsedBody, filters: relevantServices }
+                        }
+                        addModule( serviceModule );
+
+                    }else{
+                        expectedNum = expectedNum - 1;
+                        tryResponse();
+                    }
+                })
 
             }else{
                 expectedNum = expectedNum - 1;

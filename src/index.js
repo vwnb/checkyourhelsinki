@@ -91,7 +91,6 @@ var ShitModule = React.createClass({
 
 
   render: function() {
-      console.log(this.props.data);
     return (
       <section style={{display:"none"}} className="module">
         <h2>
@@ -136,7 +135,6 @@ var PicModule = React.createClass({
 
 
   render: function() {
-      console.log("hey");
     return (
       <section className="module">
         <h2>
@@ -183,7 +181,6 @@ var PieModule = React.createClass({
     series:[{}]
   },
   renderPie: function(){
-    console.log(this);
     let chart = this.refs.chart.getChart();
     chart.series[0].setData([]);
     chart.series[0].name = "Percentage";
@@ -222,23 +219,29 @@ var PieModule = React.createClass({
 /* Map */
 export default class MapModule extends React.Component{
 
- constructor(props) {
+  constructor(props) {
     super(props);
     this.state = {value: 2};
   }
 
-    handleChange = (event, index, value) => this.setState({value});
-  renderMap(){
+  handleChange = (event, index, value) => this.setState({value});
+  renderMap(id = null){
+      
     this.map = new google.maps.Map(this.refs.map, {
         center: {lat:60.1804927,lng:24.9098811},
         zoom: 12
     });
     var bounds = new google.maps.LatLngBounds();
-    for(var service in this.props.data){
-        var myLatlng = new google.maps.LatLng( this.props.data[service].latitude, this.props.data[service].longitude );
+    for(var service in this.props.data.markers){
+        
+        if(id && this.props.data.markers[service].service_ids.indexOf(id) == -1){
+            continue;
+        }
+        
+        var myLatlng = new google.maps.LatLng( this.props.data.markers[service].latitude, this.props.data.markers[service].longitude );
         var marker = new google.maps.Marker({
             position: myLatlng,
-            title:this.props.data[service].name_en
+            title:this.props.data.markers[service].name_en
         });
 
         // To add the marker to the map, call setMap();
@@ -247,9 +250,14 @@ export default class MapModule extends React.Component{
     }
 
     this.map.fitBounds(bounds);
+    
   }
+  
+  
+  
   componentDidMount() { this.renderMap(); }
   componentDidUpdate() { this.renderMap(); }
+  
   render() {
     return (
       <MuiThemeProvider muiTheme={getMuiTheme()}>
@@ -257,8 +265,13 @@ export default class MapModule extends React.Component{
        <CardHeader
                      title={this.props.title}
                    />
-
-
+        {this.props.data.filters.map(function(filter) {
+            return <FlatButton
+                    key={filter.id}
+                    label={filter.name_en}
+                    onTouchTap={this.renderMap.bind(this, filter.id)}
+                />
+        }, this)}
 
         <div ref="map" style={{height:"200px"}}>I should be a map!</div>
 
@@ -305,7 +318,7 @@ var AddressForm = React.createClass({
             <TextField
             className ="InputField"
             type = "text"
-            hintText="Buleverdi 30"
+            hintText="Bulevardi 30"
             floatingLabelText="Address You want to check"
             value={this.state.address}
             onChange={this.handleAddressChange}
@@ -326,7 +339,6 @@ var AddressForm = React.createClass({
 
 var ModuleWrap = React.createClass({
   handleAddressSubmit: function(data) {
-    console.log(this.props);
     $.ajax({
       url: this.props.url,
       dataType: 'json',
@@ -344,7 +356,6 @@ var ModuleWrap = React.createClass({
     return {data: []};
   },
   handleChange : function(value){
-      console.log("hei");
       this.setState({
         selectedValue: value,
       });
