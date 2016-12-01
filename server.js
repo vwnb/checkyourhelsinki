@@ -105,6 +105,12 @@ app.get('/api', function(req, res) {
     /* Documentation of the location object (variable name data): */
     /* https://developers.google.com/maps/documentation/javascript/geocoding#GeocodingResponses */
     geocoder.geocode(inputAddress, function ( err, data ) {
+        
+        if(!data.results.length){
+            res.status(400);
+            res.send('Address not found.');
+            return false;
+        }
 
         /* In addition to whatever Google knows, the coordinate pair must be mapped to a "Peruspiiri" */
         var perusPiiri;
@@ -307,8 +313,6 @@ app.get('/api', function(req, res) {
                     },
                     function (error, response, postBody) {
                         
-                        console.log(url);
-                        console.log(postBody);
                         postBody = postBody.trim();
                         var parsedBody = JSON.parse(postBody);
                         
