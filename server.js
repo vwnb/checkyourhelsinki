@@ -248,7 +248,7 @@ app.get('/api', function(req, res) {
                             if(collection[0].key[0] == perusPiiri.properties.KOKOTUNNUS){
                                 attractivenessDescr += "The in/out migration ratio of "
                                                     + toTitleCase(perusPiiri.properties.NIMI)
-                                                    + " is " + attractiveness.toFixed(3) + ".";
+                                                    + " is " + (attractiveness * 100).toFixed(2) + "%.";
                             }
                             
                             //return value for _.sortBy to sort by
