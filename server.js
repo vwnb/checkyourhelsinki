@@ -173,6 +173,8 @@ app.get('/api', function(req, res) {
         var descrArr = [];
             descrArr.push(typeof perusPiiri != "undefined" ? titleStr + " is located in " + toTitleCase(perusPiiri.properties.NIMI) + "." : "Couldn't map "+titleStr+" to any Helsinki neighborhood. Maybe it's not in Helsinki?");
 
+        
+
         /* Absolutely crazy procedural thing that gets attractiveness data */
         request.post({
                 url: "http://api.aluesarjat.fi/PXWeb/api/v1/fi/"
@@ -207,7 +209,7 @@ app.get('/api', function(req, res) {
                 postBody = postBody.trim();
                 var parsedBody = JSON.parse(postBody);
                 
-                if (!error && response.statusCode == 200 && postBody.length) {
+                if (!error && response.statusCode == 200 && postBody.length && typeof perusPiiri != "undefined") {
                     
                     var attractivenessDescr = "";
                     
@@ -357,71 +359,76 @@ app.get('/api', function(req, res) {
                 }
 
             });
-        }          
-
-
-        makeDemographyPie(
-            'http://api.aluesarjat.fi/PXWeb/api/v1/fi/'
-                    +encodeURI('Helsingin seudun tilastot')+'/'
-                    +encodeURI('Pääkaupunkiseutu alueittain')+'/'
-                    +encodeURI('Väestö')+'/'
-                    +encodeURI('Väestörakenne')+'/'
-                    +encodeURI('A02S_HKI_Vakiluku1962.px'),
-            "Age demographics",
-            [
-                { key: "Alue", value: [perusPiiri.properties.KOKOTUNNUS] },
-                { key: "Vuosi", value: ["54"] }
-            ],
-            "Ikä"
-        );
-
-        makeDemographyPie(
-            'http://api.aluesarjat.fi/PXWeb/api/v1/fi/'
-                    +encodeURI('Helsingin seudun tilastot')+'/'
-                    +encodeURI('Pääkaupunkiseutu alueittain')+'/'
-                    +encodeURI('Väestö')+'/'
-                    +encodeURI('Perheet')+'/'
-                    +encodeURI('A01S_HKI_Perhetyypit.px'),
-            "Family sizes",
-            [
-                { key: "Alue", value: [perusPiiri.properties.KOKOTUNNUS] },
-                { key: "Vuosi", value: ["17"] }
-            ],
-            "Perhetyyppi"
-        );
+        }
         
-        makeDemographyPie(
-            'http://api.aluesarjat.fi/PXWeb/api/v1/fi/'
-                    +encodeURI('Helsingin seudun tilastot')+'/'
-                    +encodeURI('Pääkaupunkiseutu alueittain')+'/'
-                    +encodeURI('Väestö')+'/'
-                    +encodeURI('Väestonmuutokset')+'/'
-                    +encodeURI('A01S_HKI_Muuttoliike.px'),
-            "Attractiveness",
-            [
-                { key: "Alue", value: [perusPiiri.properties.KOKOTUNNUS] },
-                { key: "Ikä", value: ["99V"] },
-                { key: "Muuttosuunta", value: ["1", "2", "3", "4"] },
-                { key: "Vuosi", value: ["16"] }
-            ],
-            "Muuttosuunta"
-        );
-        
-        makeDemographyPie(
-            'http://api.aluesarjat.fi/PXWeb/api/v1/fi/'
-                    +encodeURI('Helsingin seudun tilastot')+'/'
-                    +encodeURI('Pääkaupunkiseutu alueittain')+'/'
-                    +encodeURI('Väestö')+'/'
-                    +encodeURI('Koulutustaso')+'/'
-                    +encodeURI('A01S_HKI_Vaesto_koulutusaste.px'),
-            "Education levels",
-            [
-                { key: "Alue", value: [perusPiiri.properties.KOKOTUNNUS] },
-                { key: "Vuosi", value: ["16"] }
-            ],
-            "Koulutusaste"
-        );
-        
+        if(typeof perusPiiri != "undefined"){
+                
+            makeDemographyPie(
+                'http://api.aluesarjat.fi/PXWeb/api/v1/fi/'
+                        +encodeURI('Helsingin seudun tilastot')+'/'
+                        +encodeURI('Pääkaupunkiseutu alueittain')+'/'
+                        +encodeURI('Väestö')+'/'
+                        +encodeURI('Väestörakenne')+'/'
+                        +encodeURI('A02S_HKI_Vakiluku1962.px'),
+                "Age demographics",
+                [
+                    { key: "Alue", value: [perusPiiri.properties.KOKOTUNNUS] },
+                    { key: "Vuosi", value: ["54"] }
+                ],
+                "Ikä"
+            );
+
+            makeDemographyPie(
+                'http://api.aluesarjat.fi/PXWeb/api/v1/fi/'
+                        +encodeURI('Helsingin seudun tilastot')+'/'
+                        +encodeURI('Pääkaupunkiseutu alueittain')+'/'
+                        +encodeURI('Väestö')+'/'
+                        +encodeURI('Perheet')+'/'
+                        +encodeURI('A01S_HKI_Perhetyypit.px'),
+                "Family sizes",
+                [
+                    { key: "Alue", value: [perusPiiri.properties.KOKOTUNNUS] },
+                    { key: "Vuosi", value: ["17"] }
+                ],
+                "Perhetyyppi"
+            );
+            
+            makeDemographyPie(
+                'http://api.aluesarjat.fi/PXWeb/api/v1/fi/'
+                        +encodeURI('Helsingin seudun tilastot')+'/'
+                        +encodeURI('Pääkaupunkiseutu alueittain')+'/'
+                        +encodeURI('Väestö')+'/'
+                        +encodeURI('Väestonmuutokset')+'/'
+                        +encodeURI('A01S_HKI_Muuttoliike.px'),
+                "Attractiveness",
+                [
+                    { key: "Alue", value: [perusPiiri.properties.KOKOTUNNUS] },
+                    { key: "Ikä", value: ["99V"] },
+                    { key: "Muuttosuunta", value: ["1", "2", "3", "4"] },
+                    { key: "Vuosi", value: ["16"] }
+                ],
+                "Muuttosuunta"
+            );
+            
+            makeDemographyPie(
+                'http://api.aluesarjat.fi/PXWeb/api/v1/fi/'
+                        +encodeURI('Helsingin seudun tilastot')+'/'
+                        +encodeURI('Pääkaupunkiseutu alueittain')+'/'
+                        +encodeURI('Väestö')+'/'
+                        +encodeURI('Koulutustaso')+'/'
+                        +encodeURI('A01S_HKI_Vaesto_koulutusaste.px'),
+                "Education levels",
+                [
+                    { key: "Alue", value: [perusPiiri.properties.KOKOTUNNUS] },
+                    { key: "Vuosi", value: ["16"] }
+                ],
+                "Koulutusaste"
+            );
+            
+        }else{
+            expectedNum = expectedNum - 4;
+            tryResponse();
+        }
 
         /* 3: SERVICES */
         request('http://www.hel.fi/palvelukarttaws/rest/v2/unit/?lat='+(data.results[0].geometry.location.lat).toFixed(5)+'&lon='+(data.results[0].geometry.location.lng).toFixed(5)+'&distance=500', function (error, response, body) {
