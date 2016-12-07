@@ -294,7 +294,7 @@ app.get('/api', function(req, res) {
         function makeDemographyPie(url, title, filters, value){
 
             request(url, function (error, response, body) {
-                
+
                 var parsedRootBody = JSON.parse(body);
 
                 if (!error && response.statusCode == 200 && body.length) {
@@ -314,7 +314,7 @@ app.get('/api', function(req, res) {
                         }
                     },
                     function (error, response, postBody) {
-                        
+
                         postBody = postBody.trim();
                         var parsedBody = JSON.parse(postBody);
                         
@@ -370,7 +370,7 @@ app.get('/api', function(req, res) {
                         +encodeURI('Väestö')+'/'
                         +encodeURI('Väestörakenne')+'/'
                         +encodeURI('A02S_HKI_Vakiluku1962.px'),
-                "Age demographics",
+                "Age demographics of " + toTitleCase(perusPiiri.properties.NIMI),
                 [
                     { key: "Alue", value: [perusPiiri.properties.KOKOTUNNUS] },
                     { key: "Vuosi", value: ["54"] }
@@ -385,7 +385,7 @@ app.get('/api', function(req, res) {
                         +encodeURI('Väestö')+'/'
                         +encodeURI('Perheet')+'/'
                         +encodeURI('A01S_HKI_Perhetyypit.px'),
-                "Family sizes",
+                "Family sizes in " + toTitleCase(perusPiiri.properties.NIMI),
                 [
                     { key: "Alue", value: [perusPiiri.properties.KOKOTUNNUS] },
                     { key: "Vuosi", value: ["17"] }
@@ -400,7 +400,7 @@ app.get('/api', function(req, res) {
                         +encodeURI('Väestö')+'/'
                         +encodeURI('Väestonmuutokset')+'/'
                         +encodeURI('A01S_HKI_Muuttoliike.px'),
-                "Attractiveness",
+                "Attractiveness of " + toTitleCase(perusPiiri.properties.NIMI),
                 [
                     { key: "Alue", value: [perusPiiri.properties.KOKOTUNNUS] },
                     { key: "Ikä", value: ["99V"] },
@@ -417,7 +417,7 @@ app.get('/api', function(req, res) {
                         +encodeURI('Väestö')+'/'
                         +encodeURI('Koulutustaso')+'/'
                         +encodeURI('A01S_HKI_Vaesto_koulutusaste.px'),
-                "Education levels",
+                "Education levels in " + toTitleCase(perusPiiri.properties.NIMI),
                 [
                     { key: "Alue", value: [perusPiiri.properties.KOKOTUNNUS] },
                     { key: "Vuosi", value: ["16"] }

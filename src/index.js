@@ -50,8 +50,7 @@ var ModuleList = React.createClass({
       switch(module.type){
         case "mess":
           return (
-            <ShitModule key={"m"+index} title={module.title} data={module.data} type={module.type}>
-            </ShitModule>
+            <div>Placeholder</div>
           );
         case "text":
           return (
@@ -84,23 +83,6 @@ var ModuleList = React.createClass({
 });
 
 
-
-/* Placeholder */
-
-var ShitModule = React.createClass({
-
-
-  render: function() {
-    return (
-      <section style={{display:"none"}} className="module">
-        <h2>
-          {this.props.title}
-        </h2>
-        {JSON.stringify(this.props.data)}
-      </section>
-    );
-  }
-});
 
 
 /* Paragraphs (type text) */
@@ -279,7 +261,8 @@ export default class MapModule extends React.Component{
       </MuiThemeProvider >
     );
   }
-};
+}
+
 
 var AddressForm = React.createClass({
   getInitialState: function() {
@@ -301,25 +284,19 @@ var AddressForm = React.createClass({
     return (
         <MuiThemeProvider muiTheme={getMuiTheme()}>
         <div>
+       
         <Card>
-             <CardHeader
-               title="Murad Tanmoy"
-               subtitle="Vanha Mantie"
-               avatar="murad.jpg"
-             />
          <CardMedia overlay={<CardTitle title="Check the latest information on your local area" subtitle="StreetCheck has information across Helsinki " />} >
-            <div style={{height:"500px", background:"grey"}}></div>
+            <div style={{height:"370px", backgroundImage:"url(banner2.jpg)"}}></div>
          </CardMedia>
-        </Card><br/>
-        <Card>
-            
+        </Card>
+        <Card style={{background:"#f9f9f9"}}>
         <CardText>
-        <form onSubmit={this.handleSubmit}>
+        <form onSubmit={this.handleSubmit} >
             <TextField
             className ="InputField"
             type = "text"
-            hintText="Bulevardi 30"
-            floatingLabelText="Address You want to check"
+            floatingLabelText="For example: 'Kalasatama', '00210' or 'Ehrensvärdsvägen'"
             value={this.state.address}
             onChange={this.handleAddressChange}
             rows = {2}
@@ -363,8 +340,8 @@ var ModuleWrap = React.createClass({
   render: function() {
     return (
       <MuiThemeProvider muiTheme={getMuiTheme()}>
-      <div className="moduleBox">
-        <AddressForm onAddressSubmit={this.handleAddressSubmit}  />
+      <Card className="moduleBox" style={{boxShadow:"none"}}>
+        <AddressForm onAddressSubmit={this.handleAddressSubmit} />
         <Tabs value={this.state.selectedValue} onChange={this.handleChange}>
         {this.state.data.map((list, index) => {
             return  <Tab
@@ -375,7 +352,9 @@ var ModuleWrap = React.createClass({
                     </Tab>;
         })}
         </Tabs>
-      </div>
+        
+      <CardText style={{fontSize:"smaller", textAlign:"right"}}>Data courtesy of City of Helsinki</CardText>
+      </Card>
       </MuiThemeProvider>
     );
   }
@@ -418,10 +397,6 @@ handleOpen: function(e) {
                <div>
                       <AppBar
                         title="Check Your Helsinki"
-                        iconElementRight={<RaisedButton label="Sign up"
-                        onTouchTap={this.handleOpen}
-
-                         />}
 
                       />
                   <Dialog
@@ -431,7 +406,7 @@ handleOpen: function(e) {
                        open={this.state.open}
                        onRequestClose={this.handleClose}
                      >
-                       The actions in this window were passed in as an array of React objects.
+                       Sign up coming up!
                      </Dialog>
 
                     </div>
