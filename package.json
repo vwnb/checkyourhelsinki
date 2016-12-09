@@ -44,6 +44,7 @@
     "webpack-hot-middleware": "^2.10.0"
   },
   "dependencies": {
+    "@mapbox/togeojson": "^0.16.0",
     "babel": "^6.5.2",
     "babel-core": "^6.20.0",
     "babel-loader": "^6.2.9",

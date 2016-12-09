@@ -9,7 +9,7 @@ var geocoder = require('geocoder');
 var request = require('request');
 var tj = require('togeojson'),
     fs = require('fs'),
-    jsdom = require('jsdom').jsdom;
+    DOMParser = require('xmldom').DOMParser;
 var inside = require('point-in-polygon');
 var xlsx = require('xlsx');
 
@@ -116,7 +116,7 @@ app.get('/api', function(req, res) {
 
         /* In addition to whatever Google knows, the coordinate pair must be mapped to a "Peruspiiri" */
         var perusPiiri;
-        var perusPiiriKml = jsdom(fs.readFileSync('datasets/peruspiiri.kml', 'utf8')); //Peruspiiri boundary file
+        var perusPiiriKml = new DOMParser().parseFromString(fs.readFileSync('datasets/peruspiiri.kml', 'utf8')); //Peruspiiri boundary file
         var perusPiiriJson = tj.kml(perusPiiriKml);
 
         /* For each peruspiiri */
