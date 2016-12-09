@@ -286,7 +286,7 @@ var AddressForm = React.createClass({
         <div>
        
         <Card>
-         <CardMedia overlay={<CardTitle title="Check the latest information on your local area" subtitle="StreetCheck has information across Helsinki " />} >
+         <CardMedia overlay={<CardTitle title="Everything about anyplace in Helsinki" subtitle="Services, stats and so on" />} >
             <div style={{height:"370px", backgroundImage:"url(banner2.jpg)"}}></div>
          </CardMedia>
         </Card>
@@ -316,15 +316,24 @@ var AddressForm = React.createClass({
 
 var ModuleWrap = React.createClass({
   handleAddressSubmit: function(data) {
+    this.setState({
+      loading: true,
+    });
     $.ajax({
       url: this.props.url,
       dataType: 'json',
       type: 'GET',
       data: data,
       success: function(data) {
+        this.setState({
+            loading: false,
+        });
         this.setState({ data: _.toArray(_.groupBy(data, 'category')) });
       }.bind(this),
       error: function(xhr, status, err) {
+        this.setState({
+          loading: false,
+        });
         console.error(this.props.url, status, err.toString());
       }.bind(this)
     });
@@ -342,6 +351,7 @@ var ModuleWrap = React.createClass({
       <MuiThemeProvider muiTheme={getMuiTheme()}>
       <Card className="moduleBox" style={{boxShadow:"none"}}>
         <AddressForm onAddressSubmit={this.handleAddressSubmit} />
+        { this.state.loading ? <img src="gps.gif"> : null }
         <Tabs value={this.state.selectedValue} onChange={this.handleChange}>
         {this.state.data.map((list, index) => {
             return  <Tab
