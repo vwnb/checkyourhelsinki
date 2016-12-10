@@ -283,13 +283,7 @@ var AddressForm = React.createClass({
   render: function() {
     return (
         <MuiThemeProvider muiTheme={getMuiTheme()}>
-        <div>
-       
-        <Card>
-         <CardMedia overlay={<CardTitle title="Everything about anyplace in Helsinki" subtitle="Services, stats and so on" />} >
-            <div style={{height:"400px", backgroundSize: "cover", backgroundImage:"url(banner2.jpg)", backgroundPosition: "50% 0%"}}></div>
-         </CardMedia>
-        </Card>
+
         <Card style={{background:"#f9f9f9"}}>
         <CardText>
         <form onSubmit={this.handleSubmit} >
@@ -302,11 +296,11 @@ var AddressForm = React.createClass({
             rows = {2}
              fullWidth={true}
             /><br/>
-            <RaisedButton type="submit" primary={true} label ="Find details" fullWidth={true} />
+            { this.state.address=="" ? null : <RaisedButton type="submit" primary={true} label ="Find details" fullWidth={true} /> }
         </form>
         </CardText>
         </Card>
-      </div>
+        
         </MuiThemeProvider >
     );
   }
@@ -318,6 +312,8 @@ var ModuleWrap = React.createClass({
   handleAddressSubmit: function(data) {
     this.setState({
       loading: true,
+      data: [],
+      error: null
     });
     $.ajax({
       url: this.props.url,
@@ -327,20 +323,21 @@ var ModuleWrap = React.createClass({
       success: function(data) {
         this.setState({
             loading: false,
+            data: _.toArray(_.groupBy(data, 'category'))
         });
-        this.setState({ data: _.toArray(_.groupBy(data, 'category')) });
         document.getElementById("results").scrollIntoView(false);
       }.bind(this),
       error: function(xhr, status, err) {
         this.setState({
           loading: false,
+          data: [],
+          error: "No matching address found. A more specific search probably helps."
         });
-        console.error(this.props.url, status, err.toString());
       }.bind(this)
     });
   },
   getInitialState: function() {
-    return {data: []};
+    return {data: [], loading: false, error: null};
   },
   handleChange : function(value){
       this.setState({
@@ -353,22 +350,78 @@ var ModuleWrap = React.createClass({
       <Card className="moduleBox" style={{boxShadow:"none"}}>
         <AddressForm onAddressSubmit={this.handleAddressSubmit} />
         { this.state.loading ? <CardText style={{textAlign: "center"}}><img src="gps.gif"></img></CardText> : null }
-        <Tabs value={this.state.selectedValue} onChange={this.handleChange} id="results">
-        {this.state.data.map((list, index) => {
-            return  <Tab
-                        key={"t"+index}
-                        label={list[0].category}
-                        value={index}>
-                        <ModuleList data={list} />
-                    </Tab>;
-        })}
-        </Tabs>
-        
-      <CardText style={{fontSize:"smaller", textAlign:"right"}}>Data courtesy of City of Helsinki</CardText>
+        { this.state.data.length ?
+            <Tabs value={this.state.selectedValue} onChange={this.handleChange} id="results">
+            {this.state.data.map((list, index) => {
+                return  <Tab
+                            key={"t"+index}
+                            label={list[0].category}
+                            value={index}>
+                            <ModuleList data={list} />
+                        </Tab>;
+            })}
+            </Tabs> :
+            null
+        }
+        { this.state.error ? <CardText>{this.state.error}</CardText> : null }
       </Card>
       </MuiThemeProvider>
     );
   }
+});
+
+var Header = React.createClass({
+
+  render: function() {
+    return (
+      <MuiThemeProvider muiTheme={getMuiTheme()}>
+        <Card>
+         <CardMedia overlay={<CardTitle title="Everything about anyplace in Helsinki" subtitle="Services, stats and so on" />} >
+            <div style={{height:"400px", backgroundSize: "cover", backgroundImage:"url(banner2.jpg)", backgroundPosition: "50% 70%", backgroundAttachment:"fixed"}}></div>
+         </CardMedia>
+        </Card>
+      </MuiThemeProvider>
+    );
+  }
+});
+
+var Footer = React.createClass({
+    state : { open: false },
+    getInitialState: function() {
+    return {open: false};
+    },
+    handleOpen: function(e) {
+    this.setState({open: true});
+    },
+    handleClose: function(e) {
+    this.setState({open: false});
+    },
+    render: function() {
+        const actions = [
+            <FlatButton
+                label="Close"
+                primary={true}
+                onTouchTap={this.handleClose}
+            />
+        ];
+        return (
+            <MuiThemeProvider muiTheme={getMuiTheme()}>
+            <Card style={{background:"#f9f9f9"}}>
+                <CardText style={{fontSize:"smaller", textAlign:"right"}}><FlatButton style={{color: "#aaa"}} onTouchTap={this.handleOpen} label="Acknowledgements"></FlatButton></CardText>
+                <Dialog
+                    title="Acknowledgements"
+                    actions={actions}
+                    modal={false}
+                    open={this.state.open}
+                    onRequestClose={this.handleClose}
+                    >
+                    Data is courtesy of City of Helsinki and Google.<br />
+                    Production contributors: Ville Kemppainen, Murad Tanmoy, Zohaib Malik
+                </Dialog>
+            </Card>
+            </MuiThemeProvider>
+        );
+    }
 });
 
 
@@ -377,12 +430,19 @@ var ModuleWrap = React.createClass({
 
 
 
-
-
+ReactDOM.render(
+  <Header />,
+  document.getElementById('header')
+);
 
 ReactDOM.render(
   <ModuleWrap url="/api" />,
   document.getElementById('content')
+);
+
+ReactDOM.render(
+  <Footer />,
+  document.getElementById('footer')
 );
 
 
