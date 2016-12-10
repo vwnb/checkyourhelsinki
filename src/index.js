@@ -44,7 +44,7 @@ var TextModule = React.createClass({
             <CardHeader title={this.props.title} />
             <CardText actAsExpander={true}  >
                 {this.props.data.map((p, index) => {
-                return <p key={"p"+index}>{p}</p>
+                return <p key={"p"+index} dangerouslySetInnerHTML={{__html: p}}></p>
                 })}
             </CardText>
         </Card>
@@ -227,6 +227,7 @@ var AddressForm = React.createClass({
             <Card style={{background:"#f9f9f9"}}>
                 <CardText>
                 <form onSubmit={this.handleSubmit} >
+                    Type a street, area or location name to find out everything about it!
                     <TextField
                     className ="InputField"
                     type = "text"

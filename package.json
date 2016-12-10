@@ -50,6 +50,7 @@
     "babel-preset-react": "^6.16.0",
     "babel-preset-stage-0": "^6.16.0",
     "body-parser": "^1.15.2",
+    "csvtojson": "^1.0.3",
     "express": "^4.14.0",
     "geocoder": "^0.2.2",
     "jsdom": "^9.8.3",

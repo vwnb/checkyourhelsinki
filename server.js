@@ -12,6 +12,7 @@ var tj = require('togeojson'),
     DOMParser = require('xmldom').DOMParser;
 var inside = require('point-in-polygon');
 var xlsx = require('xlsx');
+var csvtojson = require('csvtojson');
 
 var _ = require('underscore');
 
@@ -59,7 +60,7 @@ app.get('/api', function(req, res) {
     var inputAddress = req.query.address;
 
     /* Number of different modules that should be requested */
-    var expectedNum = 7; //can be dynamic or defined by hand
+    var expectedNum = 8; //can be dynamic or defined by hand
 
     /* Results of those requests go in this array */
     var modules = [];
@@ -101,7 +102,13 @@ app.get('/api', function(req, res) {
         return result;
     }
 
-
+    Math.average = function(args) {
+        var cnt, tot, i;
+        cnt = args.length;
+        tot = i = 0;
+        while (i < cnt) tot+= args[i++];
+        return tot / cnt;
+    }
 
     /* ROOT REQUEST: Get location */
     /* Documentation of the location object (variable name data): */
@@ -154,16 +161,7 @@ app.get('/api', function(req, res) {
 
         /* 1: INTRO */
         
-        /* 1.1 INTRO MAP */
-        var introMapModule = {
-            title: "Location and surrounding area",
-            type: "map",
-            category: "Basic",
-            data: {markers: [{latitude:data.results[0].geometry.location.lat, longitude:data.results[0].geometry.location.lng}], filters: []}
-        }
-        addModule( introMapModule );
-        
-        /* 1.2 TEXT MODULE */
+        /* 1.1 TEXT MODULE */
         var titleArr = [];
         for(var idx in data.results[0].address_components){
             var component = data.results[0].address_components[idx].long_name;
@@ -175,6 +173,14 @@ app.get('/api', function(req, res) {
         var descrArr = [];
             descrArr.push(typeof perusPiiri != "undefined" ? titleStr + " is located in " + toTitleCase(perusPiiri.properties.NIMI) + "." : "Couldn't map "+titleStr+" to any Helsinki neighborhood. Maybe it's not in Helsinki?");
 
+        /* 1.1 INTRO MAP */
+        var introMapModule = {
+            title: "Location and surrounding area",
+            type: "map",
+            category: "Basic",
+            data: {markers: [{latitude:data.results[0].geometry.location.lat, longitude:data.results[0].geometry.location.lng}], filters: []}
+        }
+        addModule( introMapModule );
         
 
         /* Absolutely crazy procedural thing that gets attractiveness data */
@@ -470,7 +476,74 @@ app.get('/api', function(req, res) {
                 tryResponse();
             }
         })
+        
+        var postalCode = false;
+        for(var idx in data.results[0].address_components){
+            if(data.results[0].address_components[idx].types.indexOf("postal_code") != -1){
+                postalCode = data.results[0].address_components[idx].long_name;
+            }
+        }
+        console.log(postalCode);
+        if(postalCode){
+            var Converter = csvtojson.Converter;
+            var converter = new Converter();
 
+            console.log("...");
+            
+            var msNow = new Date().getTime();
+            console.log(msNow);
+            
+            request('https://hsl.louhin.com/api/1.0/data/350?LWSAccessKey=b21f0e72-de32-4cee-ab24-242eeba7726b&filter[T18]='+postalCode+'&filter[PÄIVÄMÄÄRÄ]='+(msNow - 31557600000)+'to'+msNow, function(error, response, body){
+                var csv = body.replace(/;/g, ",");
+                if(!error && response.statusCode == 200){
+                    converter.fromString(csv, function(err,result){
+                        if(!error){
+                            
+                            var ratingArr = [];
+                            var publicOrderArr = [];
+                            
+                            for(var row in result){
+                                if(result[row]["K3B"] != "")
+                                    ratingArr.push( parseFloat(result[row]["K3B"]) );
+                                if(result[row]["K2A5"] != ""){
+                                    publicOrderArr.push( parseFloat(result[row]["K2A5"]) );
+                                }
+                            }
+                            
+                            var transportArr = [];
+                            
+                            if(ratingArr.length){
+                                transportArr.push("In the past two years, "+ratingArr.length+" transport users active in "+postalCode+" have rated the quality of HSL services as an average of "+Math.average(ratingArr).toFixed(2))+" out of 5.";
+                            }
+                            if(publicOrderArr.length){
+                                transportArr.push("In the past two years, "+publicOrderArr.length+" transport users active in "+postalCode+" have rated public order in transport as a "+Math.average(publicOrderArr).toFixed(2)+" out of 5");
+                            }
+                            
+                            transportArr.push('For more detailed information about public transport, visit <a href="https://hsl.fi">hsl.fi</a>');
+                            
+                            var transportModule = {
+                                title: "Transport users' opinions in "+postalCode,
+                                type: "text",
+                                category: "Transport",
+                                data: transportArr
+                            }
+                            addModule( transportModule );
+                        }else{
+                            expectedNum = expectedNum - 1;
+                            tryResponse();
+                        }
+                    });
+                }else{
+                    expectedNum = expectedNum - 1;
+                    tryResponse();
+                }
+            });
+        }else{
+            expectedNum = expectedNum - 1;
+            tryResponse();
+        }
+
+       
 
     });
 });
