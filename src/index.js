@@ -287,7 +287,7 @@ var AddressForm = React.createClass({
        
         <Card>
          <CardMedia overlay={<CardTitle title="Everything about anyplace in Helsinki" subtitle="Services, stats and so on" />} >
-            <div style={{height:"370px", backgroundImage:"url(banner2.jpg)"}}></div>
+            <div style={{height:"400px", backgroundSize: "cover", backgroundImage:"url(banner2.jpg)", backgroundPosition: "50% 0%"}}></div>
          </CardMedia>
         </Card>
         <Card style={{background:"#f9f9f9"}}>
@@ -329,6 +329,7 @@ var ModuleWrap = React.createClass({
             loading: false,
         });
         this.setState({ data: _.toArray(_.groupBy(data, 'category')) });
+        document.getElementById("results").scrollIntoView(false);
       }.bind(this),
       error: function(xhr, status, err) {
         this.setState({
@@ -351,8 +352,8 @@ var ModuleWrap = React.createClass({
       <MuiThemeProvider muiTheme={getMuiTheme()}>
       <Card className="moduleBox" style={{boxShadow:"none"}}>
         <AddressForm onAddressSubmit={this.handleAddressSubmit} />
-        { this.state.loading ? <img src="gps.gif"> : null }
-        <Tabs value={this.state.selectedValue} onChange={this.handleChange}>
+        { this.state.loading ? <CardText style={{textAlign: "center"}}><img src="gps.gif"></img></CardText> : null }
+        <Tabs value={this.state.selectedValue} onChange={this.handleChange} id="results">
         {this.state.data.map((list, index) => {
             return  <Tab
                         key={"t"+index}
@@ -374,62 +375,6 @@ var ModuleWrap = React.createClass({
 
 
 
-var Form = React.createClass({
- state : {
-    open: false,
-  },
-getInitialState: function() {
-    return {open: false};
-  },
-handleOpen: function(e) {
-    this.setState({open: true});
-  },
-  handleClose: function(e) {
-      this.setState({open: false});
-    },
-
-  render: function() {
-        const actions = [
-              <FlatButton
-                label="Cancel"
-                primary={true}
-                onTouchTap={this.handleClose}
-              />,
-              <FlatButton
-                label="Submit"
-                primary={true}
-                keyboardFocused={true}
-                onTouchTap={this.handleClose}
-              />,
-            ];
-    return (
-       <MuiThemeProvider muiTheme={getMuiTheme()}>
-               <div>
-                      <AppBar
-                        title="Check Your Helsinki"
-
-                      />
-                  <Dialog
-                       title="Dialog With Actions"
-                       actions={actions}
-                       modal={false}
-                       open={this.state.open}
-                       onRequestClose={this.handleClose}
-                     >
-                       Sign up coming up!
-                     </Dialog>
-
-                    </div>
-            </MuiThemeProvider>
-    );
-  }
-});
-
-
-ReactDOM.render(
-  <Form  />,
-  document.getElementById('nav')
-);
 
 
 

@@ -1,7 +1,6 @@
 {
-  "name": "react-hot-boilerplate",
+  "name": "checkyourkortteli",
   "version": "1.0.0",
-  "description": "Boilerplate for ReactJS project with hot code reloading",
   "scripts": {
     "postinstall": "webpack -p --config ./webpack.prod.config.js --progress --colors",
     "start": "node server.js",
@@ -22,7 +21,6 @@
     "edit",
     "webpack"
   ],
-  "author": "Dan Abramov <dan.abramov@me.com> (http://github.com/gaearon)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/gaearon/react-hot-boilerplate/issues"
