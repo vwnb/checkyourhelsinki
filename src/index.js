@@ -17,73 +17,20 @@ import injectTapEventPlugin from 'react-tap-event-plugin';
 // http://stackoverflow.com/a/34015469/988941
 injectTapEventPlugin();
 
-// navbar
-
 import  {Component} from 'react';
-import AppBar from 'material-ui/AppBar';
 
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 
-
-import IconMenu from 'material-ui/IconMenu';
-import IconButton from 'material-ui/IconButton';
 import FontIcon from 'material-ui/FontIcon';
 import NavigationExpandMoreIcon from 'material-ui/svg-icons/navigation/expand-more';
-import MenuItem from 'material-ui/MenuItem';
-import DropDownMenu from 'material-ui/DropDownMenu';
 import RaisedButton from 'material-ui/RaisedButton';
-import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
 import TextField from 'material-ui/TextField';
 
 import {Card, CardActions, CardHeader, CardMedia, CardTitle, CardText} from 'material-ui/Card';
 
-// navbar
 
-
-
-
-
-var ModuleList = React.createClass({
-  render: function() {
-    var modules = this.props.data.map((module, index) => {
-      switch(module.type){
-        case "mess":
-          return (
-            <div>Placeholder</div>
-          );
-        case "text":
-          return (
-            <TextModule key={"m"+index} title={module.title} data={module.data} type={module.type}>
-            </TextModule>
-          );
-        case "pie":
-          return (
-            <PieModule key={"m"+index} title={module.title} data={module.data} type={module.type}>
-            </PieModule>
-          );
-        case "map":
-          return (
-            <MapModule key={"m"+index} title={module.title} data={module.data} type={module.type}>
-            </MapModule>
-          );
-        case "pics":
-          return (
-            <PicModule key={"m"+index} title={module.title} data={module.data} type={module.type}>
-            </PicModule>
-          );
-      }
-    });
-    return (
-      <div className="moduleList">
-        {modules}
-      </div>
-    );
-  }
-});
-
-
-
+/*** MAIN CONTENT MODULES ***/
 
 /* Paragraphs (type text) */
 
@@ -93,25 +40,21 @@ var TextModule = React.createClass({
   render: function() {
     return (
       <MuiThemeProvider muiTheme={getMuiTheme()}>
-      <Card>
-
-         <CardHeader
-              title={this.props.title}
-            />
-       <CardText actAsExpander={true}  >
-        {this.props.data.map((p, index) => {
-        return <p key={"p"+index}>{p}</p>
-        })}
-
-  </CardText>
-       </Card>
-        </MuiThemeProvider >
+        <Card>
+            <CardHeader title={this.props.title} />
+            <CardText actAsExpander={true}  >
+                {this.props.data.map((p, index) => {
+                return <p key={"p"+index}>{p}</p>
+                })}
+            </CardText>
+        </Card>
+      </MuiThemeProvider >
     );
   }
 });
 
 
-/* Pics */
+/* Pics (deprecated) */
 
 var PicModule = React.createClass({
 
@@ -123,7 +66,7 @@ var PicModule = React.createClass({
           {this.props.title}
         </h2>
         {this.props.data.photos.map(function(pic) {
-        return <img src={pic.photo_file_url} />
+            return <img src={pic.photo_file_url} />
         })}
       </section>
     );
@@ -182,23 +125,21 @@ var PieModule = React.createClass({
   render: function() {
 
     return (
-    <MuiThemeProvider muiTheme={getMuiTheme()}>
-       <Card>
-               <CardHeader
-                    title={this.props.title}
-                  />
-            <CardText  >
-        <ReactHighcharts config={this.config} ref="chart"></ReactHighcharts>
-         </CardText>
+        <MuiThemeProvider muiTheme={getMuiTheme()}>
+            <Card>
+                <CardHeader title={this.props.title} />
+                <CardText>
+                    <ReactHighcharts config={this.config} ref="chart"></ReactHighcharts>
+                </CardText>
             </Card>
- </MuiThemeProvider >
+        </MuiThemeProvider >
     );
 
   }
 });
 
 
-/* Map */
+/* Map with markers and filters */
 export default class MapModule extends React.Component{
 
   constructor(props) {
@@ -235,34 +176,33 @@ export default class MapModule extends React.Component{
     
   }
   
-  
-  
   componentDidMount() { this.renderMap(); }
   componentDidUpdate() { this.renderMap(); }
   
   render() {
     return (
-      <MuiThemeProvider muiTheme={getMuiTheme()}>
-         <Card>
-       <CardHeader
-                     title={this.props.title}
-                   />
-        {this.props.data.filters.map(function(filter) {
-            return <FlatButton
-                    key={filter.id}
-                    label={filter.name_en}
-                    onTouchTap={this.renderMap.bind(this, filter.id)}
-                />
-        }, this)}
-
-        <div ref="map" style={{height:"200px"}}>I should be a map!</div>
-
-         </Card>
-      </MuiThemeProvider >
+        <MuiThemeProvider muiTheme={getMuiTheme()}>
+            <Card>
+                <CardHeader title={this.props.title} />
+                {this.props.data.filters.map(function(filter) {
+                    return <FlatButton
+                            key={filter.id}
+                            label={filter.name_en}
+                            onTouchTap={this.renderMap.bind(this, filter.id)}
+                        />
+                }, this)}
+                <div ref="map" style={{height:"200px"}}>I should be a map!</div>
+            </Card>
+        </MuiThemeProvider >
     );
   }
 }
 
+/*** /CONTENT MODULES END ***/
+
+
+
+/*** SEARCH FORM ***/
 
 var AddressForm = React.createClass({
   getInitialState: function() {
@@ -284,29 +224,30 @@ var AddressForm = React.createClass({
     return (
         <MuiThemeProvider muiTheme={getMuiTheme()}>
 
-        <Card style={{background:"#f9f9f9"}}>
-        <CardText>
-        <form onSubmit={this.handleSubmit} >
-            <TextField
-            className ="InputField"
-            type = "text"
-            floatingLabelText="For example: 'Kalasatama', '00210' or 'Ehrensvärdsvägen'"
-            value={this.state.address}
-            onChange={this.handleAddressChange}
-            rows = {2}
-             fullWidth={true}
-            /><br/>
-            { this.state.address=="" ? null : <RaisedButton type="submit" primary={true} label ="Find details" fullWidth={true} /> }
-        </form>
-        </CardText>
-        </Card>
-        
+            <Card style={{background:"#f9f9f9"}}>
+                <CardText>
+                <form onSubmit={this.handleSubmit} >
+                    <TextField
+                    className ="InputField"
+                    type = "text"
+                    floatingLabelText="For example: 'Kalasatama', '00210' or 'Ehrensvärdsvägen'"
+                    value={this.state.address}
+                    onChange={this.handleAddressChange}
+                    rows = {2}
+                    fullWidth={true}
+                    /><br/>
+                    { this.state.address=="" ? null : <RaisedButton type="submit" primary={true} label ="Find details" fullWidth={true} /> }
+                </form>
+                </CardText>
+            </Card>
+
         </MuiThemeProvider >
     );
   }
 });
 
 
+/*** TABS CONTAINER ***/
 
 var ModuleWrap = React.createClass({
   handleAddressSubmit: function(data) {
@@ -369,6 +310,49 @@ var ModuleWrap = React.createClass({
     );
   }
 });
+
+
+/* Contents of one tab */
+
+var ModuleList = React.createClass({
+  render: function() {
+    var modules = this.props.data.map((module, index) => {
+      switch(module.type){
+        case "mess":
+          return (
+            <div>Placeholder</div>
+          );
+        case "text":
+          return (
+            <TextModule key={"m"+index} title={module.title} data={module.data} type={module.type}>
+            </TextModule>
+          );
+        case "pie":
+          return (
+            <PieModule key={"m"+index} title={module.title} data={module.data} type={module.type}>
+            </PieModule>
+          );
+        case "map":
+          return (
+            <MapModule key={"m"+index} title={module.title} data={module.data} type={module.type}>
+            </MapModule>
+          );
+        case "pics":
+          return (
+            <PicModule key={"m"+index} title={module.title} data={module.data} type={module.type}>
+            </PicModule>
+          );
+      }
+    });
+    return (
+      <div className="moduleList">
+        {modules}
+      </div>
+    );
+  }
+});
+
+
 
 var Header = React.createClass({
 
