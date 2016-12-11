@@ -42,7 +42,7 @@ var TextModule = React.createClass({
       <MuiThemeProvider muiTheme={getMuiTheme()}>
         <Card>
             <CardHeader title={this.props.title} />
-            <CardText actAsExpander={true}  >
+            <CardText >
                 {this.props.data.map((p, index) => {
                 return <p key={"p"+index} dangerouslySetInnerHTML={{__html: p}}></p>
                 })}
@@ -361,8 +361,9 @@ var Header = React.createClass({
     return (
       <MuiThemeProvider muiTheme={getMuiTheme()}>
         <Card>
-         <CardMedia overlay={<CardTitle title="Everything about anyplace in Helsinki" subtitle="Services, stats and so on" />} >
-            <div style={{height:"400px", backgroundSize: "cover", backgroundImage:"url(banner2.jpg)", backgroundPosition: "50% 70%", backgroundAttachment:"fixed"}}></div>
+         <CardMedia style={{position:"relative", height:"400px", overflow: "hidden"}} overlay={<CardTitle title="Everything about anyplace in Helsinki" subtitle="Services, stats and so on" />} >
+            <div style={{position: "absolute", top:"0", height:"100%", backgroundSize: "cover", backgroundImage:"url(banner2.jpg)", backgroundPosition: "50% 70%", backgroundAttachment:"fixed"}}></div>
+            <div style={{position: "absolute", top:"0", height:"100%", backgroundImage:"url(noise.png)", backgroundAttachment:"fixed"}}></div>
          </CardMedia>
         </Card>
       </MuiThemeProvider>

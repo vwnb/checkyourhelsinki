@@ -477,22 +477,23 @@ app.get('/api', function(req, res) {
             }
         })
         
+        /* 4: TRANSPORT USER OPINIONS */
         var postalCode = false;
         for(var idx in data.results[0].address_components){
             if(data.results[0].address_components[idx].types.indexOf("postal_code") != -1){
                 postalCode = data.results[0].address_components[idx].long_name;
             }
         }
-        console.log(postalCode);
         if(postalCode){
+            
+            //CSV to JSON
             var Converter = csvtojson.Converter;
             var converter = new Converter();
-
-            console.log("...");
             
             var msNow = new Date().getTime();
-            console.log(msNow);
             
+            // Get all feedback from last year from users who marked the postal code as theirs
+            // (Not necessarily feedback about transport in the area)
             request('https://hsl.louhin.com/api/1.0/data/350?LWSAccessKey=b21f0e72-de32-4cee-ab24-242eeba7726b&filter[T18]='+postalCode+'&filter[PÄIVÄMÄÄRÄ]='+(msNow - 31557600000)+'to'+msNow, function(error, response, body){
                 var csv = body.replace(/;/g, ",");
                 if(!error && response.statusCode == 200){
@@ -504,16 +505,16 @@ app.get('/api', function(req, res) {
                             
                             for(var row in result){
                                 if(result[row]["K3B"] != "")
-                                    ratingArr.push( parseFloat(result[row]["K3B"]) );
+                                    ratingArr.push( parseFloat(result[row]["K3B"]) ); //Overall x/5 rating of HSL
                                 if(result[row]["K2A5"] != ""){
-                                    publicOrderArr.push( parseFloat(result[row]["K2A5"]) );
+                                    publicOrderArr.push( parseFloat(result[row]["K2A5"]) ); //"I find there's no disturbances during transport", scale of 1 to 5"
                                 }
                             }
                             
                             var transportArr = [];
                             
                             if(ratingArr.length){
-                                transportArr.push("In the past two years, "+ratingArr.length+" transport users active in "+postalCode+" have rated the quality of HSL services as an average of "+Math.average(ratingArr).toFixed(2))+" out of 5.";
+                                transportArr.push("In the past two years, "+ratingArr.length+" transport users active in "+postalCode+" have rated the quality of HSL services as an average of "+Math.average(ratingArr).toFixed(2)+" out of 5.");
                             }
                             if(publicOrderArr.length){
                                 transportArr.push("In the past two years, "+publicOrderArr.length+" transport users active in "+postalCode+" have rated public order in transport as a "+Math.average(publicOrderArr).toFixed(2)+" out of 5");
@@ -529,6 +530,7 @@ app.get('/api', function(req, res) {
                             }
                             addModule( transportModule );
                         }else{
+                            //TODO get rid of this horrible repetition, in other places also
                             expectedNum = expectedNum - 1;
                             tryResponse();
                         }
