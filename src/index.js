@@ -114,10 +114,6 @@ var PieModule = React.createClass({
             name: service,
             y: parseInt(this.props.data[service])
         });
-        console.log({
-            name: service,
-            y: parseInt(this.props.data[service])
-        });
     }
   },
   componentDidMount() { this.renderPie(); },
@@ -173,6 +169,9 @@ export default class MapModule extends React.Component{
     }
 
     this.map.fitBounds(bounds);
+    if(id){
+        this.refs.map.scrollIntoView(false);
+    }
     
   }
   
