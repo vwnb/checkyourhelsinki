@@ -496,10 +496,11 @@ app.get('/api', function(req, res) {
             var converter = new Converter();
             
             var msNow = new Date().getTime();
+            var numMonths = 15;
             
             // Get all feedback from last year from users who marked the postal code as theirs
             // (Not necessarily feedback about transport in the area)
-            request('https://hsl.louhin.com/api/1.0/data/350?LWSAccessKey=b21f0e72-de32-4cee-ab24-242eeba7726b&filter[T18]='+postalCode+'&filter[PÄIVÄMÄÄRÄ]='+(msNow - 31557600000)+'to'+msNow+'&limit=500', function(error, response, body){
+            request('https://hsl.louhin.com/api/1.0/data/350?LWSAccessKey=b21f0e72-de32-4cee-ab24-242eeba7726b&filter[T18]='+postalCode+'&filter[PÄIVÄMÄÄRÄ]='+(msNow - (15778476000 * numMonths)+'to'+msNow+'&limit=500', function(error, response, body){
                 var csv = body.replace(/;/g, ",");
                 if(!error && response.statusCode == 200){
                     converter.fromString(csv, function(err,result){
@@ -521,7 +522,7 @@ app.get('/api', function(req, res) {
                             if(ratingArr.length){
                                 
                                 var ratingAvg = Math.average(ratingArr);
-                                var ratingDescr = "In the past two years, " + ratingArr.length + " transport users active in " + postalCode + " have found the quality of HSL services "
+                                var ratingDescr = "Transport users active in " + postalCode + " have found the quality of HSL services "
                                                   + ( ratingAvg > 4.1 ?
                                                         (ratingAvg < 4.2 ?
                                                             "OK. "
@@ -530,7 +531,7 @@ app.get('/api', function(req, res) {
                                                         :
                                                         "bad compared to other places! 😣 "
                                                     )
-                                                    +"(on average "+ratingAvg.toFixed(2)+"/5)";
+                                                    +"(on average "+ratingAvg.toFixed(2)+"/5, based on "+ratingArr.length+" opinions from the last "+numMonths+" months)";
                                 
                                 transportArr.push( ratingDescr );
                             }
@@ -545,7 +546,7 @@ app.get('/api', function(req, res) {
                                                         :
                                                         "bad compared to other places! 😨 "
                                                     )
-                                                    +"(on average "+publicOrderAvg.toFixed(2)+"/5)";
+                                                    +"(on average "+publicOrderAvg.toFixed(2)+"/5, based on "+publicOrderArr.length+" opinions from the last "+numMonths+" months)";
                                 
                                 transportArr.push( publicOrderDescr );
                             }
