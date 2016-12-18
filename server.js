@@ -500,7 +500,7 @@ app.get('/api', function(req, res) {
             
             // Get all feedback from last year from users who marked the postal code as theirs
             // (Not necessarily feedback about transport in the area)
-            request('https://hsl.louhin.com/api/1.0/data/350?LWSAccessKey=b21f0e72-de32-4cee-ab24-242eeba7726b&filter[T18]='+postalCode+'&filter[PÄIVÄMÄÄRÄ]='+(msNow - (15778476000 * numMonths)+'to'+msNow+'&limit=500', function(error, response, body){
+            request('https://hsl.louhin.com/api/1.0/data/350?LWSAccessKey=b21f0e72-de32-4cee-ab24-242eeba7726b&filter[T18]='+postalCode+'&filter[PÄIVÄMÄÄRÄ]='+(msNow - (15778476000 * numMonths))+'to'+msNow+'&limit=500', function(error, response, body){
                 var csv = body.replace(/;/g, ",");
                 if(!error && response.statusCode == 200){
                     converter.fromString(csv, function(err,result){
