@@ -171,7 +171,7 @@ app.get('/api', function(req, res) {
         }
         var titleStr = titleArr.join(" / ");
         var descrArr = [];
-            descrArr.push(typeof perusPiiri != "undefined" ? titleStr + " is located in " + toTitleCase(perusPiiri.properties.NIMI) + "." : "Couldn't map "+titleStr+" to any Helsinki neighborhood. Maybe it's not in Helsinki?");
+            descrArr.push(typeof perusPiiri != "undefined" ? titleStr + " is located in " + toTitleCase(perusPiiri.properties.NIMI) + "." : titleStr+" is not in Helsinki, but we have some information on it.");
 
         /* 1.1 INTRO MAP */
         var introMapModule = {
@@ -256,9 +256,15 @@ app.get('/api', function(req, res) {
                             
                             //Print spaghettifully here
                             if(collection[0].key[0] == perusPiiri.properties.KOKOTUNNUS){
-                                attractivenessDescr += "The in/out migration ratio of "
-                                                    + toTitleCase(perusPiiri.properties.NIMI)
-                                                    + " is " + (attractiveness * 100).toFixed(2) + "%.";
+                                attractivenessDescr += (attractiveness > 0.99 ?
+                                                            (attractiveness < 1.01 ?
+                                                                "The population of " + toTitleCase(perusPiiri.properties.NIMI) + " isn't changing much. "
+                                                                :
+                                                                "😍 People are moving into " + toTitleCase(perusPiiri.properties.NIMI) + "! ")
+                                                            :
+                                                            "😣 People are moving out of "+toTitleCase(perusPiiri.properties.NIMI)+"! ")
+                                                     + "(The in/out ratio of is "
+                                                     + (attractiveness * 100).toFixed(2) + "%)";
                             }
                             
                             //return value for _.sortBy to sort by
@@ -271,7 +277,7 @@ app.get('/api', function(req, res) {
                         return collection[0].key[0] == perusPiiri.properties.KOKOTUNNUS;
                     }) + 1;
                     
-                    attractivenessDescr += " "+toTitleCase(perusPiiri.properties.NIMI) + " is the #" + attractivenessRank + "/" + _.size(groupedByArea) + " most attractive area in Helsinki.";
+                    attractivenessDescr += " "+toTitleCase(perusPiiri.properties.NIMI) + " is the #" + attractivenessRank + " most attractive area in Helsinki, out of " + _.size(groupedByArea) + " areas.";
                     
                     descrArr.push(attractivenessDescr);
                     
@@ -456,12 +462,11 @@ app.get('/api', function(req, res) {
                                 }
                             }
                         }
-                        
                         var serviceModule = {
                             title: "Services in the area",
                             type: "map",
                             category: "Services",
-                            data: {markers: parsedBody, filters: relevantServices }
+                            data: {markers: parsedBody, filterTitles: _.reduce(parsedServiceBody, function(memo, item){ memo[item.id] = item.name_en; return memo; }, {}), filters: _.toArray(_.groupBy(relevantServices, "parent_id")) }
                         }
                         addModule( serviceModule );
 
@@ -514,10 +519,35 @@ app.get('/api', function(req, res) {
                             var transportArr = [];
                             
                             if(ratingArr.length){
-                                transportArr.push("In the past two years, "+ratingArr.length+" transport users active in "+postalCode+" have rated the quality of HSL services as an average of "+Math.average(ratingArr).toFixed(2)+" out of 5.");
+                                
+                                var ratingAvg = Math.average(ratingArr);
+                                var ratingDescr = "In the past two years, " + ratingArr.length + " transport users active in " + postalCode + " have found the quality of HSL services "
+                                                  + ( ratingAvg > 4.1 ?
+                                                        (ratingAvg < 4.2 ?
+                                                            "OK. "
+                                                            :
+                                                            "good compared to other places! 😊 ")
+                                                        :
+                                                        "bad compared to other places! 😣 "
+                                                    )
+                                                    +"(on average "+ratingAvg.toFixed(2)+"/5)";
+                                
+                                transportArr.push( ratingDescr );
                             }
                             if(publicOrderArr.length){
-                                transportArr.push("In the past two years, "+publicOrderArr.length+" transport users active in "+postalCode+" have rated public order in transport as a "+Math.average(publicOrderArr).toFixed(2)+" out of 5");
+                                var publicOrderAvg = Math.average(publicOrderArr);
+                                var publicOrderDescr = "In the past two years, " + publicOrderArr.length + " transport users active in " + postalCode + " have found the public order in transport "
+                                                  + ( publicOrderAvg > 4.1 ?
+                                                        (publicOrderAvg < 4.2 ?
+                                                            "OK. "
+                                                            :
+                                                            "good compared to other places! 😊 ")
+                                                        :
+                                                        "bad compared to other places! 😨 "
+                                                    )
+                                                    +"(on average "+publicOrderAvg.toFixed(2)+"/5)";
+                                
+                                transportArr.push( publicOrderDescr );
                             }
                             
                             transportArr.push('For more detailed information about public transport, visit <a href="https://hsl.fi">hsl.fi</a>');

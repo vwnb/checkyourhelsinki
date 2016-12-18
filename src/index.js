@@ -140,12 +140,11 @@ export default class MapModule extends React.Component{
 
   constructor(props) {
     super(props);
-    this.state = {value: 2};
+    this.state = {value: 2, infowindow: null};
   }
 
   handleChange = (event, index, value) => this.setState({value});
   renderMap(id = null){
-      
     this.map = new google.maps.Map(this.refs.map, {
         center: {lat:60.1804927,lng:24.9098811},
         zoom: 12
@@ -158,19 +157,41 @@ export default class MapModule extends React.Component{
         }
         
         var myLatlng = new google.maps.LatLng( this.props.data.markers[service].latitude, this.props.data.markers[service].longitude );
+        
+        var markerContentStr = '' + (typeof this.props.data.markers[service].name_en != "undefined" ? '<h5>'+this.props.data.markers[service].name_en+'</h5>' : '')
+                             + (typeof this.props.data.markers[service].street_address_fi != "undefined" ? '<p>'+this.props.data.markers[service].street_address_fi+'</p>' : '')
+                             + ( typeof this.props.data.markers[service].www_fi != "undefined" ? '<p><a href="' + this.props.data.markers[service].www_fi + '">Website in finnish</a></p>' : '' )
+                             + ( typeof this.props.data.markers[service].www_en != "undefined" ? '<p><a href="' + this.props.data.markers[service].www_en + '">Website in english</a></p>' : '' )
+                             + ( typeof this.props.data.markers[service].desc_fi != "undefined" ? '<p>In finnish:<br>' + this.props.data.markers[service].desc_fi + '</p>' : '' )
+                             + ( typeof this.props.data.markers[service].desc_en != "undefined" ? '<p>In english:<br>' + this.props.data.markers[service].desc_en + '</p>' : '' );
+
         var marker = new google.maps.Marker({
             position: myLatlng,
-            title:this.props.data.markers[service].name_en
+            title:this.props.data.markers[service].name_en,
+            html: markerContentStr
+        });
+        
+        var diz = this;
+        google.maps.event.addListener(marker, "click", function () {
+            diz.state.infowindow.setContent(this.html);
+            diz.state.infowindow.open(diz.map, this);
         });
 
         // To add the marker to the map, call setMap();
         marker.setMap(this.map);
         bounds.extend(marker.getPosition());
     }
+    
+    this.state.infowindow = new google.maps.InfoWindow({
+        content: "loading..."
+    })
 
     this.map.fitBounds(bounds);
     if(id){
-        this.refs.map.scrollIntoView(false);
+        var diz = this;
+        setTimeout(function(){
+            diz.refs.map.scrollIntoView(false);
+        }, 300);
     }
     
   }
@@ -183,14 +204,23 @@ export default class MapModule extends React.Component{
         <MuiThemeProvider muiTheme={getMuiTheme()}>
             <Card>
                 <CardHeader title={this.props.title} />
-                {this.props.data.filters.map(function(filter) {
-                    return <FlatButton
-                            key={filter.id}
-                            label={filter.name_en}
-                            onTouchTap={this.renderMap.bind(this, filter.id)}
-                        />
-                }, this)}
-                <div ref="map" style={{height:"200px"}}>I should be a map!</div>
+                {this.props.data.filters.map(function(list) {
+                    return (
+                        <CardText key={"filterGroup"+list[0].parent_id}>
+                            <h5>{ this.props.data.filterTitles[list[0].parent_id] }</h5>
+                            {
+                                list.map(function(filter){
+                                    return <FlatButton
+                                        key={filter.id}
+                                        label={filter.name_en}
+                                        onTouchTap={this.renderMap.bind(this, filter.id)}
+                                    />
+                                }, this )
+                            }
+                        </CardText>
+                    )
+                }, this) }
+                <div ref="map" style={{height:"400px"}}>I should be a map!</div>
             </Card>
         </MuiThemeProvider >
     );
@@ -266,7 +296,6 @@ var ModuleWrap = React.createClass({
             loading: false,
             data: _.toArray(_.groupBy(data, 'category'))
         });
-        document.getElementById("results").scrollIntoView(false);
       }.bind(this),
       error: function(xhr, status, err) {
         this.setState({
