@@ -263,7 +263,7 @@ app.get('/api', function(req, res) {
                                                                 "😍 People are moving into " + toTitleCase(perusPiiri.properties.NIMI) + "! ")
                                                             :
                                                             "😣 People are moving out of "+toTitleCase(perusPiiri.properties.NIMI)+"! ")
-                                                     + "(The in/out ratio of is "
+                                                     + "(The in/out ratio is "
                                                      + (attractiveness * 100).toFixed(2) + "%)";
                             }
                             

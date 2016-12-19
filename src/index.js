@@ -145,9 +145,10 @@ export default class MapModule extends React.Component{
 
   handleChange = (event, index, value) => this.setState({value});
   renderMap(id = null){
+    var diz = this;
     this.map = new google.maps.Map(this.refs.map, {
         center: {lat:60.1804927,lng:24.9098811},
-        zoom: 12
+        zoom: 16,
     });
     var bounds = new google.maps.LatLngBounds();
     for(var service in this.props.data.markers){
@@ -171,7 +172,6 @@ export default class MapModule extends React.Component{
             html: markerContentStr
         });
         
-        var diz = this;
         google.maps.event.addListener(marker, "click", function () {
             diz.state.infowindow.setContent(this.html);
             diz.state.infowindow.open(diz.map, this);
@@ -179,16 +179,21 @@ export default class MapModule extends React.Component{
 
         // To add the marker to the map, call setMap();
         marker.setMap(this.map);
+        
         bounds.extend(marker.getPosition());
     }
     
     this.state.infowindow = new google.maps.InfoWindow({
         content: "loading..."
     })
-
+    
+    google.maps.event.addListenerOnce(diz.map, 'bounds_changed', function(event) {
+        if (this.getZoom() > 17) {
+            this.setZoom(17);
+        }
+    });
     this.map.fitBounds(bounds);
     if(id){
-        var diz = this;
         setTimeout(function(){
             diz.refs.map.scrollIntoView(false);
         }, 300);
