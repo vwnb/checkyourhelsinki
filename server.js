@@ -556,7 +556,7 @@ app.get('/api', function(req, res) {
                             var transportModule = {
                                 title: "Transport users' opinions in "+postalCode,
                                 type: "text",
-                                category: "Transport",
+                                category: "Basic",
                                 data: transportArr
                             }
                             addModule( transportModule );
